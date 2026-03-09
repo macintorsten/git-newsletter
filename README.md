@@ -1,6 +1,100 @@
-# Markdown Mailer
+# Markdown Mailer + Git Newsletter Editor
 
-A containerized utility to convert Markdown and CSS into inline-styled, email-ready HTML, and send it. It uses `uv` for lightning-fast dependency management.
+A containerized utility to convert Markdown and CSS into inline-styled,
+email-ready HTML, send it via SMTP, and — new! — **automatically generate a
+developer newsletter** from recent git activity using an AI agent pipeline. It
+uses `uv` for lightning-fast dependency management.
+
+---
+
+## ✨ Newsletter Editor (new)
+
+The newsletter editor is an AI-agent pipeline that researches your git
+repository and produces a friendly, emoji-filled Markdown newsletter for your
+team. It follows an **editor → journalist → researcher** model:
+
+| Role | What it does |
+|---|---|
+| 📰 **Newsletter Editor** (orchestrator) | Delegates work, makes editorial decisions, assembles the newsletter |
+| 🔍 **Git Researcher** | Fetches recent commits, branch activity, and stale branches |
+| ✍️ **Commit Journalist** | Turns raw diffs into readable, educational articles |
+| 🌐 **Web Researcher** | Researches topics on the internet for deeper context |
+
+### Quick start
+
+```bash
+# Generate a newsletter for the last 7 days on 'main'
+python -m newsletter --repo /path/to/your/repo
+
+# Custom look-back window and output path
+python -m newsletter \
+    --repo /path/to/your/repo \
+    --branch develop \
+    --days 14 \
+    --output weekly_digest.md
+```
+
+### Newsletter editor options
+
+| Option | Default | Description |
+|---|---|---|
+| `--repo` | *(required)* | Local path or remote URL of the git repository |
+| `--branch` | `main` | Branch to report on |
+| `--days` | `7` | Number of days to look back for commits |
+| `--stale-days` | `30` | Days of inactivity before a branch is "stale" |
+| `--output` | `newsletter_output.md` | Output Markdown file path |
+| `--db` | `newsletter_session.json` | Session database file path |
+
+### Agent & skill definitions
+
+The agents and skills are defined as files that GitHub Copilot and VS Code
+Copilot can load automatically:
+
+| Path | Purpose |
+|---|---|
+| `.github/copilot/agents/newsletter-editor.yaml` | Orchestrator / editor |
+| `.github/copilot/agents/git-researcher.yaml` | Git research specialist |
+| `.github/copilot/agents/commit-journalist.yaml` | Commit journalist |
+| `.github/copilot/agents/web-researcher.yaml` | Web researcher |
+| `.github/skills/git-research/SKILL.md` | Git research skill |
+| `.github/skills/commit-analysis/SKILL.md` | Commit analysis skill |
+| `.github/skills/web-research/SKILL.md` | Web research skill |
+| `.github/skills/newsletter-writing/SKILL.md` | Newsletter writing skill (includes emoji instructions) |
+
+### Newsletter structure
+
+A typical output looks like this:
+
+```markdown
+# 📰 my-repo Dev Digest
+> Covering the last 7 days of activity on `main`.
+
+## 🚀 Newly Shipped (merged to main)
+## 🌿 Release Branches
+## 🔨 Development Branches
+## 🕸️ Stale Branches
+```
+
+Deep-dive articles (chosen by the editor for 0–3 important topics) are
+rendered as blockquotes directly after the related change:
+
+```markdown
+**Merged:** `feature/auth-refresh` by @alice
+
+Brief summary of the change…
+
+> 📖 **Deep Dive: What is OAuth token refresh?**
+>
+> <web-research article>
+>
+> 🔗 [Learn more](https://...)
+```
+
+### Extending with new sources
+
+Add a new source adapter by subclassing `newsletter.sources.base.BaseSource`
+and implementing `fetch(db)`. Future sources can include GitLab, Jenkins
+pipelines, Jira tickets, and more.
 
 ---
 
@@ -24,6 +118,35 @@ git-newsletter/
 │       ├── 08-ocean-breeze.css     ← Calm cool coastal
 │       ├── 09-retro-pop.css        ← Bold 90s zine aesthetic
 │       └── 10-minimalist-rose.css  ← Soft warm rose palette
+├── newsletter/                         ← Newsletter editor package (new)
+│   ├── __init__.py
+│   ├── __main__.py                     ← `python -m newsletter` entry point
+│   ├── cli.py                          ← Argument parsing & main()
+│   ├── models.py                       ← Data models & session database schema
+│   ├── orchestrator.py                 ← Pipeline orchestration logic
+│   ├── session_db.py                   ← Shared session state manager
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   └── prompts.py                  ← LLM system-prompt templates
+│   ├── skills/
+│   │   ├── __init__.py
+│   │   ├── git_skills.py               ← Git helper functions
+│   │   └── web_skills.py               ← Web search helpers
+│   └── sources/
+│       ├── __init__.py
+│       ├── base.py                     ← Abstract base source
+│       └── git_source.py               ← Git data source adapter
+├── .github/
+│   ├── copilot/agents/                 ← VS Code Copilot custom agents (new)
+│   │   ├── newsletter-editor.yaml
+│   │   ├── git-researcher.yaml
+│   │   ├── commit-journalist.yaml
+│   │   └── web-researcher.yaml
+│   └── skills/                         ← GitHub Copilot agent skills (new)
+│       ├── git-research/SKILL.md
+│       ├── commit-analysis/SKILL.md
+│       ├── web-research/SKILL.md
+│       └── newsletter-writing/SKILL.md
 ├── pyproject.toml
 ├── build_email.py
 ├── send_email.py

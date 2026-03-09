@@ -1,12 +1,22 @@
 [project]
 name = "markdown-mailer"
-version = "0.1.0"
-description = "Markdown to email HTML converter and sender"
+version = "0.2.0"
+description = "Markdown to email HTML converter, sender, and AI-powered git newsletter editor"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "jinja2>=3.1.4",
     "markdown>=3.5.2",
     "premailer>=3.10.0",
-    "python-dotenv>=1.0.1"
+    "python-dotenv>=1.0.1",
+    "gitpython>=3.1.40",
 ]
+
+[project.optional-dependencies]
+# Install these for richer web-research capabilities
+web = [
+    "requests>=2.31.0",
+]
+
+[project.scripts]
+newsletter = "newsletter.cli:main"
