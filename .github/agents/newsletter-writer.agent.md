@@ -4,9 +4,11 @@ description: >
   Specialist agent that assembles the final Markdown newsletter from all
   content stored in session_store. Invoked by newsletter-editor via handoff
   after editorial review and (optional) web research are complete.
+user-invocable: false
 handoffs:
   - label: "↩️ Return to editor — newsletter written"
     agent: newsletter-editor
+    send: true
     prompt: >
       Newsletter writing is complete for session_id = '<session_id>'.
       The Markdown output is saved in nl_output and written to disk.

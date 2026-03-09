@@ -5,9 +5,11 @@ description: >
   repository AND writes engaging newsletter articles in a single pass.
   Invoked by newsletter-editor via handoff after the session is initialised.
   Combines the former git-researcher and commit-journalist roles.
+user-invocable: false
 handoffs:
   - label: "↩️ Return to editor — commit analysis done"
     agent: newsletter-editor
+    send: true
     prompt: >
       Commit analysis is complete for session_id = '<session_id>'.
       nl_commits, nl_branches, and nl_articles are populated.
