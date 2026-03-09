@@ -1,33 +1,110 @@
-# Markdown Mailer
+# Markdown Mailer + Git Newsletter Editor
 
-A containerized utility to convert Markdown and CSS into inline-styled, email-ready HTML, and send it. It uses `uv` for lightning-fast dependency management.
+A containerized utility to convert Markdown and CSS into inline-styled,
+email-ready HTML, send it via SMTP, and — new! — **automatically generate a
+developer newsletter** from recent git activity using an AI agent pipeline. It
+uses `uv` for lightning-fast dependency management.
 
 ---
+
+## ✨ Newsletter Editor (new)
+
+The newsletter editor is an AI-agent pipeline that researches your git
+repository and produces a friendly, emoji-filled Markdown newsletter for your
+team. It follows an **editor → analyst → researcher → writer** model:
+
+| Role | What it does |
+|---|---|
+| 📰 **Newsletter Editor** (orchestrator) | Delegates work, makes editorial decisions, confirms output |
+| 🔍 **Commit Analyst** | Fetches git data AND writes newsletter articles in a single pass |
+| 🌐 **Web Researcher** | Researches deep-dive topics on the internet |
+| ✍️ **Newsletter Writer** | Assembles the final polished Markdown newsletter |
+
+See [`.github/agents/FLOW.md`](.github/agents/FLOW.md) for the full
+agent interaction diagram with handoffs.
+
+### Quick start
+
+Main path: start with natural language and let `newsletter-editor` orchestrate.
+
+```bash
+# 1) Non-interactive kickoff (recommended)
+copilot -p "Create a concise weekly engineering newsletter from https://github.com/microsoft/vscode.git. Use branch main, cover the last 7 days, title it Dev Weekly, and write the final markdown to vscode-weekly-newsletter.md." --agent "newsletter-editor" --yolo
+
+# 2) Profile-based kickoff (example)
+newsletter_markdown=$(copilot -p "Use profile prompt file .github/prompts/profiles/examples/example-flask-monthly.prompt.md.
+Generate a maintainers-focused monthly digest. Respond with only the final newsletter markdown content." --agent "newsletter-editor" --yolo)
+
+printf '%s\n' "$newsletter_markdown" > flask-monthly-newsletter.md
+```
+
+Optional prompt files:
+
+- Template: `.github/prompts/profiles/TEMPLATE.prompt.md`
+- Example profile: `.github/prompts/profiles/examples/example-vscode-weekly.prompt.md`
+- Example profile: `.github/prompts/profiles/examples/example-flask-monthly.prompt.md`
+
+### Agent & skill definitions
+
+The agents are `.agent.md` files in `.github/agents/` that VS Code Copilot
+loads automatically. Each agent has `handoffs` in its frontmatter so Copilot
+displays action buttons to guide users through the pipeline:
+
+| Path | Purpose |
+|---|---|
+| `.github/agents/newsletter-editor.agent.md` | Orchestrator / editor |
+| `.github/agents/commit-analyst.agent.md` | Git data + article writing (single pass) |
+| `.github/agents/web-researcher.agent.md` | Deep-dive topic research |
+| `.github/agents/newsletter-writer.agent.md` | Final newsletter assembly |
+| `.github/agents/FLOW.md` | Agent interaction diagram |
+| `.github/skills/commit-analysis/SKILL.md` | Combined git research + commit analysis skill |
+| `.github/skills/commit-analysis/git_skills.py` | Git helper functions used by commit analysis |
+| `.github/skills/web-research/SKILL.md` | Web research skill |
+| `.github/skills/newsletter-writing/SKILL.md` | Newsletter writing skill (includes emoji instructions) |
+
+### Newsletter structure
+
+A typical output looks like this:
+
+```markdown
+# 📰 my-repo Dev Digest
+> Covering the last 7 days of activity on `main`.
+
+## 🚀 Newly Shipped (merged to main)
+## 🌿 Release Branches
+## 🔨 Development Branches
+## 🕸️ Stale Branches
+```
+
+Deep-dive articles (chosen by the editor for 0–3 important topics) are
+rendered as blockquotes directly after the related change:
+
+```markdown
+**Merged:** `feature/auth-refresh` by @alice
+
+Brief summary of the change…
+
+> 📖 **Deep Dive: What is OAuth token refresh?**
+>
+> <web-research article>
+>
+> 🔗 [Learn more](https://...)
+```
 
 ## Project Structure
 
 ```
 git-newsletter/
-├── .devcontainer/
-│   ├── devcontainer.json
-│   └── Dockerfile
-├── examples/
-│   ├── example_input.md        ← Rich newsletter Markdown example
-│   └── styles/
-│       ├── 01-clean-blue.css       ← Crisp, modern default
-│       ├── 02-dark-mode.css        ← Sleek dark theme
-│       ├── 03-corporate-green.css  ← Professional emerald
-│       ├── 04-warm-sunset.css      ← Vibrant orange/coral
-│       ├── 05-terminal-hacker.css  ← Monospace green-on-black
-│       ├── 06-elegant-serif.css    ← Refined editorial
-│       ├── 07-purple-gradient.css  ← Bold violet gradient
-│       ├── 08-ocean-breeze.css     ← Calm cool coastal
-│       ├── 09-retro-pop.css        ← Bold 90s zine aesthetic
-│       └── 10-minimalist-rose.css  ← Soft warm rose palette
-├── pyproject.toml
-├── build_email.py
-├── send_email.py
-└── README.md
+├── .devcontainer/          # Container setup for local dev
+├── .github/
+│   ├── agents/             # Copilot agent definitions + flow
+│   ├── prompts/            # Optional prompt helpers and profiles
+│   │   └── profiles/       # TEMPLATE + example profile configurations
+│   └── skills/             # Agent skills and helper scripts
+├── examples/               # Sample markdown, styles, generated HTML
+├── build_email.py          # Markdown + CSS -> inline HTML
+├── send_email.py           # SMTP sender
+└── pyproject.toml
 ```
 
 ---
