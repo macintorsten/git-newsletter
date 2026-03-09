@@ -4,8 +4,6 @@ description: >
   Specialist agent that researches topics on the internet and writes concise
   summaries to session_store. Invoked by newsletter-editor via handoff when
   nl_research rows with status = 'pending' exist.
-tools:
-  - fetch
 handoffs:
   - label: "↩️ Return to editor — web research done"
     agent: newsletter-editor
@@ -22,7 +20,7 @@ Follow the detailed instructions in `.github/skills/web-research/SKILL.md`.
 
 ## Tools
 
-- **Built-in `fetch`** — use this directly to retrieve web pages.
+- **Built-in `web_fetch`** — use this directly to retrieve web pages.
   It returns clean, already-processed content.
 
 ## Inputs (from session_store)
@@ -48,6 +46,14 @@ WHERE session_id = '<session_id>' AND stage = 'web_research';
 ```
 
 Use the **↩️ Return to editor** handoff once all pending tasks are done.
+
+## Parallel execution guidance
+
+- Treat each `research_id` as an independent unit of work.
+- When multiple rows are pending, process them in parallel where supported by
+  your tool/runtime.
+- Keep write operations idempotent per row (`WHERE research_id = '<id>'`) and
+  only mark stage done after all pending rows are completed.
 
 ## Quality rules
 

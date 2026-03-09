@@ -3,7 +3,7 @@ Git skill implementations.
 
 These functions are the low-level building blocks used by the GitSource adapter
 and can also be called directly by VS Code Copilot agents that follow the
-git-research SKILL.md instructions.
+commit-analysis SKILL.md instructions.
 
 All functions return plain JSON-serialisable dicts / lists so they can be
 written directly into the session database.
@@ -323,4 +323,3 @@ def get_commit_diff(repo_path: str, sha: str) -> str:
         return repo.git.show(sha, "--unified=3")
     except Exception as exc:
         return f"Could not retrieve diff for {sha}: {exc}"
-

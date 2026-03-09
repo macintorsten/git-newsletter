@@ -13,10 +13,8 @@ from the repository **and** turn it into short, engaging newsletter articles.
 
 ### Phase 1 — collect git data with git_skills.py
 
-`git_skills.py` lives in `.github/skills/git-research/` (the SKILL.md there
-was merged into this file, but the Python helper script stays in that
-directory for backward compatibility with the `newsletter.skills.git_skills`
-Python shim). Use it to collect data, then persist the results to
+`git_skills.py` lives in this same skill directory,
+`.github/skills/commit-analysis/`. Use it to collect data, then persist the results to
 `session_store`.
 
 #### Step 1 — read session parameters

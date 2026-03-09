@@ -25,10 +25,8 @@ You are the **Commit Analyst**. In a single pass you collect raw git data
 
 ## Tools
 
-- `.github/skills/git-research/git_skills.py` — Python helpers for git
-  operations. The SKILL.md for git-research was merged into
-  `.github/skills/commit-analysis/SKILL.md`, but `git_skills.py` remains
-  in its original location for backward compatibility with the Python shim.
+- `.github/skills/commit-analysis/git_skills.py` — Python helpers for git
+  operations, co-located with `.github/skills/commit-analysis/SKILL.md`.
   Supports both local paths and remote URLs identically.
   Functions:
   - `get_recent_commits(repo_path, branch, period_days)`

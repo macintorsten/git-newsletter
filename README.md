@@ -25,27 +25,24 @@ agent interaction diagram with handoffs.
 
 ### Quick start
 
-```bash
-# Generate a newsletter for the last 7 days on 'main'
-python -m newsletter --repo /path/to/your/repo
+Main path: start with natural language and let `newsletter-editor` orchestrate.
 
-# Custom look-back window and output path
-python -m newsletter \
-    --repo /path/to/your/repo \
-    --branch develop \
-    --days 14 \
-    --output weekly_digest.md
+```bash
+# 1) Non-interactive kickoff (recommended)
+copilot -p "Create a concise weekly engineering newsletter from https://github.com/microsoft/vscode.git. Use branch main, cover the last 7 days, title it Dev Weekly, and write the final markdown to vscode-weekly-newsletter.md." --agent "newsletter-editor" --yolo
+
+# 2) Profile-based kickoff (example)
+newsletter_markdown=$(copilot -p "Use profile prompt file .github/prompts/profiles/examples/example-flask-monthly.prompt.md.
+Generate a maintainers-focused monthly digest. Respond with only the final newsletter markdown content." --agent "newsletter-editor" --yolo)
+
+printf '%s\n' "$newsletter_markdown" > flask-monthly-newsletter.md
 ```
 
-### Newsletter editor options
+Optional prompt files:
 
-| Option | Default | Description |
-|---|---|---|
-| `--repo` | *(required)* | Local path or remote URL of the git repository |
-| `--branch` | `main` | Branch to report on |
-| `--days` | `7` | Number of days to look back for commits |
-| `--stale-days` | `30` | Days of inactivity before a branch is "stale" |
-| `--output` | `newsletter_output.md` | Output Markdown file path |
+- Template: `.github/prompts/profiles/TEMPLATE.prompt.md`
+- Example profile: `.github/prompts/profiles/examples/example-vscode-weekly.prompt.md`
+- Example profile: `.github/prompts/profiles/examples/example-flask-monthly.prompt.md`
 
 ### Agent & skill definitions
 
@@ -61,6 +58,7 @@ displays action buttons to guide users through the pipeline:
 | `.github/agents/newsletter-writer.agent.md` | Final newsletter assembly |
 | `.github/agents/FLOW.md` | Agent interaction diagram |
 | `.github/skills/commit-analysis/SKILL.md` | Combined git research + commit analysis skill |
+| `.github/skills/commit-analysis/git_skills.py` | Git helper functions used by commit analysis |
 | `.github/skills/web-research/SKILL.md` | Web research skill |
 | `.github/skills/newsletter-writing/SKILL.md` | Newsletter writing skill (includes emoji instructions) |
 
@@ -93,67 +91,20 @@ Brief summary of the change…
 > 🔗 [Learn more](https://...)
 ```
 
-### Extending with new sources
-
-Add a new source adapter by subclassing `newsletter.sources.base.BaseSource`
-and implementing `fetch()` (returns a plain dict). Future sources can include
-GitLab, Jenkins pipelines, Jira tickets, and more.
-
----
-
 ## Project Structure
 
 ```
 git-newsletter/
-├── .devcontainer/
-│   ├── devcontainer.json
-│   └── Dockerfile
-├── examples/
-│   ├── example_input.md        ← Rich newsletter Markdown example
-│   └── styles/
-│       ├── 01-clean-blue.css       ← Crisp, modern default
-│       ├── 02-dark-mode.css        ← Sleek dark theme
-│       ├── 03-corporate-green.css  ← Professional emerald
-│       ├── 04-warm-sunset.css      ← Vibrant orange/coral
-│       ├── 05-terminal-hacker.css  ← Monospace green-on-black
-│       ├── 06-elegant-serif.css    ← Refined editorial
-│       ├── 07-purple-gradient.css  ← Bold violet gradient
-│       ├── 08-ocean-breeze.css     ← Calm cool coastal
-│       ├── 09-retro-pop.css        ← Bold 90s zine aesthetic
-│       └── 10-minimalist-rose.css  ← Soft warm rose palette
-├── newsletter/                         ← Newsletter editor package (new)
-│   ├── __init__.py
-│   ├── __main__.py                     ← `python -m newsletter` entry point
-│   ├── cli.py                          ← Argument parsing & main()
-│   ├── orchestrator.py                 ← CLI pipeline (plain dicts, no session DB)
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   └── prompts.py                  ← LLM prompts + session_store SQL schema
-│   ├── skills/
-│   │   ├── __init__.py
-│   │   └── git_skills.py               ← Shim → .github/skills/git-research/git_skills.py
-│   └── sources/
-│       ├── __init__.py
-│       ├── base.py                     ← Abstract base source
-│       └── git_source.py               ← Git data source adapter
+├── .devcontainer/          # Container setup for local dev
 ├── .github/
-│   ├── agents/                         ← VS Code Copilot custom agents
-│   │   ├── newsletter-editor.agent.md  ← Orchestrator (with handoffs)
-│   │   ├── commit-analyst.agent.md     ← Git data + articles (single pass)
-│   │   ├── web-researcher.agent.md     ← Deep-dive topic research
-│   │   ├── newsletter-writer.agent.md  ← Final newsletter assembly
-│   │   └── FLOW.md                     ← Agent interaction diagram
-│   └── skills/                         ← GitHub Copilot agent skills
-│       ├── git-research/
-│       │   └── git_skills.py           ← Git helper (kept here; imported by Python shim)
-│       ├── commit-analysis/SKILL.md    ← Combined git research + article writing
-│       ├── web-research/
-│       │   └── SKILL.md                ← Uses built-in fetch tool
-│       └── newsletter-writing/SKILL.md
-├── pyproject.toml
-├── build_email.py
-├── send_email.py
-└── README.md
+│   ├── agents/             # Copilot agent definitions + flow
+│   ├── prompts/            # Optional prompt helpers and profiles
+│   │   └── profiles/       # TEMPLATE + example profile configurations
+│   └── skills/             # Agent skills and helper scripts
+├── examples/               # Sample markdown, styles, generated HTML
+├── build_email.py          # Markdown + CSS -> inline HTML
+├── send_email.py           # SMTP sender
+└── pyproject.toml
 ```
 
 ---

@@ -73,6 +73,10 @@ User invokes @newsletter-editor
         newsletter_output.md
 ```
 
+Parallelism note: when multiple deep-dive rows are queued in `nl_research`,
+the `web-researcher` may process those rows concurrently before marking
+`web_research` as done.
+
 ## State machine (`nl_status`)
 
 All stages are tracked in `session_store`:
