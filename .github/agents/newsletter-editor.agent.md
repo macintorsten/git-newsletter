@@ -5,20 +5,24 @@ description: >
   activity. Invoke this agent to kick off the full pipeline. It initialises
   the session, delegates work to specialist agents via handoffs, makes
   editorial decisions, and confirms the final output to the user.
+user-invocable: true
 handoffs:
   - label: "🔍 Analyse commits & write articles"
     agent: commit-analyst
+    send: true
     prompt: >
       Fetch recent git data and write newsletter articles for
       session_id = '<session_id>'. Check nl_sessions for repo, branch, and
       period settings. Follow .github/skills/commit-analysis/SKILL.md.
   - label: "🌐 Research deep-dive topics"
     agent: web-researcher
+    send: true
     prompt: >
       Research all pending topics in nl_research for
       session_id = '<session_id>'. Follow .github/skills/web-research/SKILL.md.
   - label: "✍️ Write the newsletter"
     agent: newsletter-writer
+    send: true
     prompt: >
       Assemble the final newsletter for session_id = '<session_id>'.
       All selected articles and research are ready in session_store.

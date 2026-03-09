@@ -4,9 +4,11 @@ description: >
   Specialist agent that researches topics on the internet and writes concise
   summaries to session_store. Invoked by newsletter-editor via handoff when
   nl_research rows with status = 'pending' exist.
+user-invocable: false
 handoffs:
   - label: "↩️ Return to editor — web research done"
     agent: newsletter-editor
+    send: true
     prompt: >
       Web research is complete for session_id = '<session_id>'.
       All nl_research rows are updated with summaries and sources.
