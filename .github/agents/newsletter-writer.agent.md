@@ -4,8 +4,6 @@ description: >
   Specialist agent that assembles the final Markdown newsletter from all
   content stored in session_store. Invoked by newsletter-editor via handoff
   after editorial review and (optional) web research are complete.
-tools:
-  - codebase
 handoffs:
   - label: "↩️ Return to editor — newsletter written"
     agent: newsletter-editor

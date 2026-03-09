@@ -3,6 +3,9 @@ FROM python:3.11-slim
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends curl git && rm -rf /var/lib/apt/lists/*
 
+# Workaround if copilot cli does not have session_storage database enabled
+RUN apt-get install -y sqlite3
+
 # Install uv (The fast Python package installer)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
