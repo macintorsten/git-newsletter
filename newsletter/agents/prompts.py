@@ -2,7 +2,7 @@
 LLM system-prompt templates for every agent role in the newsletter pipeline.
 
 These strings are used when building prompts for an LLM API from the CLI.
-They mirror the instructions in ``.github/copilot/agents/`` and
+They mirror the instructions in ``.github/agents/`` and
 ``.github/skills/``.
 
 **State management**: agent workflows persist all state to Copilot's native
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS nl_output (
 
 CREATE TABLE IF NOT EXISTS nl_status (
     session_id TEXT NOT NULL,
-    stage      TEXT NOT NULL,  -- git_research | commit_analysis | web_research | writing
+    stage      TEXT NOT NULL,  -- commit_analysis | web_research | writing
     status     TEXT NOT NULL,  -- pending | done | failed
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (session_id, stage)
@@ -130,18 +130,16 @@ INSERT INTO nl_sessions (session_id, repo, branch, period_days, stale_after_days
 VALUES ('<session_id>', '<repo>', '<branch>', <days>, <stale_days>);
 
 INSERT INTO nl_status (session_id, stage, status) VALUES
-  ('<session_id>', 'git_research',    'pending'),
   ('<session_id>', 'commit_analysis', 'pending'),
   ('<session_id>', 'web_research',    'pending'),
   ('<session_id>', 'writing',         'pending');
 
 ## Workflow
 
-1. **Git research** — delegate to `git-researcher`; wait for
-   `nl_status.status = 'done'` where `stage = 'git_research'`.
-2. **Commit journalism** — delegate to `commit-journalist`; wait for
-   `stage = 'commit_analysis'` done.
-3. **Editorial review** — query `nl_articles` and decide which to include;
+1. **Commit analysis** — delegate to `commit-analyst` via the
+   🔍 handoff; wait for `nl_status.status = 'done'`
+   where `stage = 'commit_analysis'`.
+2. **Editorial review** — query `nl_articles` and decide which to include;
    set `selected = 1` for chosen articles (0–3 may get deep dives):
 
    UPDATE nl_articles SET selected = 1
@@ -170,15 +168,18 @@ INSERT INTO nl_status (session_id, stage, status) VALUES
 """.strip()
 
 # ---------------------------------------------------------------------------
-# Git Researcher
+# Commit Analyst (merged git-researcher + commit-journalist)
 # ---------------------------------------------------------------------------
 
-GIT_RESEARCHER_SYSTEM_PROMPT: str = """
-You are the **Git Researcher**.  Collect raw git data and write it to
-session_store.  Follow `.github/skills/git-research/SKILL.md`.
+COMMIT_ANALYST_SYSTEM_PROMPT: str = f"""
+You are the **Commit Analyst**.  In a single pass, collect raw git data and
+write newsletter articles.  Follow `.github/skills/commit-analysis/SKILL.md`.
 
-Use `.github/skills/git-research/git_skills.py` to collect data, then INSERT
-every commit and branch into session_store:
+Phase 1 — collect git data:
+Use `.github/skills/git-research/git_skills.py` to collect data
+(the git-research SKILL.md was merged into commit-analysis/SKILL.md,
+but git_skills.py stays in its original location for Python shim
+compatibility), then INSERT every commit and branch into session_store:
 
 -- database: session_store
 INSERT INTO nl_commits
@@ -189,26 +190,14 @@ INSERT INTO nl_branches
     (session_id, name, last_sha, last_author, last_commit_at, commits_in_period, is_stale, age_days, was_merged)
 VALUES (...);
 
-When done:
-UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
-WHERE session_id = '<session_id>' AND stage = 'git_research';
-""".strip()
-
-# ---------------------------------------------------------------------------
-# Commit Journalist
-# ---------------------------------------------------------------------------
-
-COMMIT_JOURNALIST_SYSTEM_PROMPT: str = f"""
-You are the **Commit Journalist**.  Turn raw commits into articles and write
-them to session_store.  Follow `.github/skills/commit-analysis/SKILL.md`.
-
--- database: session_store
-SELECT * FROM nl_commits WHERE session_id = '<session_id>';
+Phase 2 — write articles:
+Group related commits, then INSERT one article per group:
 
 INSERT INTO nl_articles
     (session_id, article_id, commit_shas, title, body_markdown, authors, deep_dive, deep_dive_q)
 VALUES ('<session_id>', '<id>', '<sha1,sha2>', '<title>', '<markdown>', '<authors>', <0|1>, '<q>');
 
+When done:
 UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
 WHERE session_id = '<session_id>' AND stage = 'commit_analysis';
 

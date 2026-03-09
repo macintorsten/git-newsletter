@@ -11,14 +11,17 @@ uses `uv` for lightning-fast dependency management.
 
 The newsletter editor is an AI-agent pipeline that researches your git
 repository and produces a friendly, emoji-filled Markdown newsletter for your
-team. It follows an **editor → journalist → researcher** model:
+team. It follows an **editor → analyst → researcher → writer** model:
 
 | Role | What it does |
 |---|---|
-| 📰 **Newsletter Editor** (orchestrator) | Delegates work, makes editorial decisions, assembles the newsletter |
-| 🔍 **Git Researcher** | Fetches recent commits, branch activity, and stale branches |
-| ✍️ **Commit Journalist** | Turns raw diffs into readable, educational articles |
-| 🌐 **Web Researcher** | Researches topics on the internet for deeper context |
+| 📰 **Newsletter Editor** (orchestrator) | Delegates work, makes editorial decisions, confirms output |
+| 🔍 **Commit Analyst** | Fetches git data AND writes newsletter articles in a single pass |
+| 🌐 **Web Researcher** | Researches deep-dive topics on the internet |
+| ✍️ **Newsletter Writer** | Assembles the final polished Markdown newsletter |
+
+See [`.github/agents/FLOW.md`](.github/agents/FLOW.md) for the full
+agent interaction diagram with handoffs.
 
 ### Quick start
 
@@ -46,17 +49,18 @@ python -m newsletter \
 
 ### Agent & skill definitions
 
-The agents and skills are defined as files that GitHub Copilot and VS Code
-Copilot can load automatically:
+The agents are `.agent.md` files in `.github/agents/` that VS Code Copilot
+loads automatically. Each agent has `handoffs` in its frontmatter so Copilot
+displays action buttons to guide users through the pipeline:
 
 | Path | Purpose |
 |---|---|
-| `.github/copilot/agents/newsletter-editor.md` | Orchestrator / editor |
-| `.github/copilot/agents/git-researcher.md` | Git research specialist |
-| `.github/copilot/agents/commit-journalist.md` | Commit journalist |
-| `.github/copilot/agents/web-researcher.md` | Web researcher |
-| `.github/skills/git-research/SKILL.md` | Git research skill |
-| `.github/skills/commit-analysis/SKILL.md` | Commit analysis skill |
+| `.github/agents/newsletter-editor.agent.md` | Orchestrator / editor |
+| `.github/agents/commit-analyst.agent.md` | Git data + article writing (single pass) |
+| `.github/agents/web-researcher.agent.md` | Deep-dive topic research |
+| `.github/agents/newsletter-writer.agent.md` | Final newsletter assembly |
+| `.github/agents/FLOW.md` | Agent interaction diagram |
+| `.github/skills/commit-analysis/SKILL.md` | Combined git research + commit analysis skill |
 | `.github/skills/web-research/SKILL.md` | Web research skill |
 | `.github/skills/newsletter-writing/SKILL.md` | Newsletter writing skill (includes emoji instructions) |
 
@@ -133,18 +137,18 @@ git-newsletter/
 │       ├── base.py                     ← Abstract base source
 │       └── git_source.py               ← Git data source adapter
 ├── .github/
-│   ├── copilot/agents/                 ← VS Code Copilot custom agents (new)
-│   │   ├── newsletter-editor.md
-│   │   ├── git-researcher.md
-│   │   ├── commit-journalist.md
-│   │   └── web-researcher.md
-│   └── skills/                         ← GitHub Copilot agent skills (new)
+│   ├── agents/                         ← VS Code Copilot custom agents
+│   │   ├── newsletter-editor.agent.md  ← Orchestrator (with handoffs)
+│   │   ├── commit-analyst.agent.md     ← Git data + articles (single pass)
+│   │   ├── web-researcher.agent.md     ← Deep-dive topic research
+│   │   ├── newsletter-writer.agent.md  ← Final newsletter assembly
+│   │   └── FLOW.md                     ← Agent interaction diagram
+│   └── skills/                         ← GitHub Copilot agent skills
 │       ├── git-research/
-│       │   ├── SKILL.md
-│       │   └── git_skills.py           ← Git helper (co-located with skill)
-│       ├── commit-analysis/SKILL.md
+│       │   └── git_skills.py           ← Git helper (kept here; imported by Python shim)
+│       ├── commit-analysis/SKILL.md    ← Combined git research + article writing
 │       ├── web-research/
-│       │   └── SKILL.md                ← Uses built-in web_fetch tool
+│       │   └── SKILL.md                ← Uses built-in fetch tool
 │       └── newsletter-writing/SKILL.md
 ├── pyproject.toml
 ├── build_email.py
