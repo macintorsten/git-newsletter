@@ -1,0 +1,130 @@
+/* ============================================================
+   Style 10: Minimalist Rose — Soft, airy, warm neutrals
+   Palette: #881337 (rose), #fff1f2 (blush), #fda4af (light rose)
+   ============================================================ */
+
+body {
+    font-family: "Palatino Linotype", Palatino, Georgia, serif;
+    color: #3d1520;
+    line-height: 1.8;
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 40px 36px;
+    background-color: #fff1f2;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 400;
+    color: #881337;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #fda4af;
+    padding-bottom: 16px;
+}
+
+h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #9f1239;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-top: 34px;
+    margin-bottom: 10px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+h3 {
+    font-size: 17px;
+    font-weight: normal;
+    color: #be123c;
+    font-style: italic;
+    margin-top: 22px;
+    margin-bottom: 4px;
+}
+
+p {
+    margin: 14px 0;
+    color: #4c1d28;
+}
+
+a {
+    color: #be123c;
+    text-decoration: none;
+    border-bottom: 1px solid #fda4af;
+    padding-bottom: 1px;
+}
+
+ul, ol {
+    padding-left: 24px;
+    margin: 14px 0;
+    color: #4c1d28;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+blockquote {
+    margin: 26px 0;
+    padding: 18px 22px;
+    background-color: #ffe4e6;
+    border-left: 3px solid #be123c;
+    color: #881337;
+    font-style: italic;
+    font-size: 16px;
+    border-radius: 0 8px 8px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 22px 0;
+    font-size: 13px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+th {
+    background-color: #881337;
+    color: #fff1f2;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #fecdd3;
+    color: #4c1d28;
+}
+
+tr:nth-child(even) td {
+    background-color: #ffe4e6;
+}
+
+hr {
+    border: none;
+    text-align: center;
+    margin: 30px auto;
+    border-top: 1px solid #fecdd3;
+}
+
+code {
+    background-color: #ffe4e6;
+    color: #881337;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: "Courier New", Courier, monospace;
+    border: 1px solid #fda4af;
+}
+
+strong {
+    color: #881337;
+}
+
+em {
+    color: #9f1239;
+}

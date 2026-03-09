@@ -1,0 +1,145 @@
+/* ============================================================
+   Style 05: Terminal Hacker — Monospace, green-on-black CLI vibe
+   Palette: #00ff41 (matrix green), #0d0d0d (black), #1a1a1a (dark grey)
+   ============================================================ */
+
+body {
+    font-family: "Courier New", Courier, "Lucida Console", monospace;
+    color: #00ff41;
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    background-color: #0d0d0d;
+}
+
+h1 {
+    font-size: 22px;
+    color: #00ff41;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 1px solid #00ff41;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+h1::before { content: "## "; color: #00cc33; }
+
+h2 {
+    font-size: 17px;
+    color: #00cc33;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 32px;
+    margin-bottom: 8px;
+}
+
+h2::before { content: "# "; color: #00aa28; }
+
+h3 {
+    font-size: 14px;
+    color: #00aa28;
+    margin-top: 20px;
+    margin-bottom: 4px;
+}
+
+h3::before { content: "> "; color: #008820; }
+
+p {
+    margin: 12px 0;
+    color: #c0ffc0;
+}
+
+a {
+    color: #00ff41;
+    text-decoration: underline;
+}
+
+ul {
+    padding-left: 0;
+    margin: 12px 0;
+    list-style: none;
+}
+
+ul li::before {
+    content: "→ ";
+    color: #00ff41;
+}
+
+ol {
+    padding-left: 24px;
+    margin: 12px 0;
+    color: #c0ffc0;
+}
+
+li {
+    margin-bottom: 6px;
+    color: #c0ffc0;
+}
+
+blockquote {
+    border-left: 3px solid #00ff41;
+    margin: 20px 0;
+    padding: 10px 14px;
+    background-color: #0d1f0d;
+    color: #00cc33;
+    font-style: normal;
+}
+
+blockquote::before {
+    content: "// ";
+    color: #007a1a;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 13px;
+    color: #c0ffc0;
+}
+
+th {
+    background-color: #001a00;
+    color: #00ff41;
+    padding: 8px 10px;
+    text-align: left;
+    border: 1px solid #00ff41;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 7px 10px;
+    border: 1px solid #003300;
+    color: #c0ffc0;
+}
+
+tr:nth-child(even) td {
+    background-color: #0a1a0a;
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed #00ff41;
+    margin: 28px 0;
+}
+
+code {
+    background-color: #001a00;
+    color: #00ff41;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 13px;
+    border: 1px solid #003300;
+}
+
+em {
+    color: #80ff80;
+    font-style: normal;
+    text-decoration: underline;
+}
+
+strong {
+    color: #ffffff;
+}

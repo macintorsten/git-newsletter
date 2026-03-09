@@ -1,0 +1,105 @@
+/* ============================================================
+   Style 04: Warm Sunset — Vibrant orange and coral palette
+   Palette: #7c2d12 (rust), #fff7ed (cream), #f97316 (orange)
+   ============================================================ */
+
+body {
+    font-family: "Trebuchet MS", Lucida Grande, Arial, sans-serif;
+    color: #431407;
+    line-height: 1.65;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    background-color: #fff7ed;
+}
+
+h1 {
+    font-size: 28px;
+    color: #c2410c;
+    border-bottom: 3px solid #fed7aa;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+}
+
+h2 {
+    font-size: 20px;
+    color: #ea580c;
+    margin-top: 30px;
+    margin-bottom: 8px;
+}
+
+h3 {
+    font-size: 16px;
+    color: #c2410c;
+    margin-top: 20px;
+    margin-bottom: 4px;
+}
+
+p {
+    margin: 12px 0;
+}
+
+a {
+    color: #ea580c;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 1px dotted #fdba74;
+}
+
+ul, ol {
+    padding-left: 22px;
+    margin: 12px 0;
+}
+
+li {
+    margin-bottom: 7px;
+}
+
+blockquote {
+    border-left: 5px solid #f97316;
+    margin: 20px 0;
+    padding: 14px 18px;
+    background-color: #ffedd5;
+    color: #7c2d12;
+    font-style: italic;
+    border-radius: 0 6px 6px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+th {
+    background-color: #c2410c;
+    color: #fff7ed;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #fed7aa;
+}
+
+tr:nth-child(even) td {
+    background-color: #fff3e7;
+}
+
+hr {
+    border: none;
+    border-top: 2px solid #fed7aa;
+    margin: 28px 0;
+}
+
+code {
+    background-color: #ffedd5;
+    color: #9a3412;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: monospace;
+    border: 1px solid #fdba74;
+}
