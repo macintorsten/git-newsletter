@@ -51,10 +51,10 @@ Copilot can load automatically:
 
 | Path | Purpose |
 |---|---|
-| `.github/copilot/agents/newsletter-editor.yaml` | Orchestrator / editor |
-| `.github/copilot/agents/git-researcher.yaml` | Git research specialist |
-| `.github/copilot/agents/commit-journalist.yaml` | Commit journalist |
-| `.github/copilot/agents/web-researcher.yaml` | Web researcher |
+| `.github/copilot/agents/newsletter-editor.md` | Orchestrator / editor |
+| `.github/copilot/agents/git-researcher.md` | Git research specialist |
+| `.github/copilot/agents/commit-journalist.md` | Commit journalist |
+| `.github/copilot/agents/web-researcher.md` | Web researcher |
 | `.github/skills/git-research/SKILL.md` | Git research skill |
 | `.github/skills/commit-analysis/SKILL.md` | Commit analysis skill |
 | `.github/skills/web-research/SKILL.md` | Web research skill |
@@ -134,10 +134,10 @@ git-newsletter/
 │       └── git_source.py               ← Git data source adapter
 ├── .github/
 │   ├── copilot/agents/                 ← VS Code Copilot custom agents (new)
-│   │   ├── newsletter-editor.yaml
-│   │   ├── git-researcher.yaml
-│   │   ├── commit-journalist.yaml
-│   │   └── web-researcher.yaml
+│   │   ├── newsletter-editor.md
+│   │   ├── git-researcher.md
+│   │   ├── commit-journalist.md
+│   │   └── web-researcher.md
 │   └── skills/                         ← GitHub Copilot agent skills (new)
 │       ├── git-research/
 │       │   ├── SKILL.md
