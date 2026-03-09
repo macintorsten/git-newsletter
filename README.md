@@ -53,6 +53,13 @@ docker run --rm -v "$PWD:/workspace" markdown-mailer python build_email.py \
   --markdown examples/example_input.md \
   --style examples/styles/01-clean-blue.css \
   --output examples/ready_to_send.html
+
+# Optional: generate a wider layout without editing the CSS file
+docker run --rm -v "$PWD:/workspace" markdown-mailer python build_email.py \
+  --markdown examples/example_input.md \
+  --style examples/styles/01-clean-blue.css \
+  --output examples/ready_to_send-wide.html \
+  --max-width 900px
 ```
 
 Swap `01-clean-blue.css` for any other style from `examples/styles/` to change the look.
@@ -94,6 +101,13 @@ python build_email.py \
   --markdown examples/example_input.md \
   --style examples/styles/01-clean-blue.css \
   --output examples/ready_to_send.html
+
+# Optional width override
+python build_email.py \
+  --markdown examples/example_input.md \
+  --style examples/styles/01-clean-blue.css \
+  --output examples/ready_to_send-wide.html \
+  --max-width 900px
 ```
 
 ---
@@ -140,6 +154,23 @@ python send_email.py \
 
 ## Script Reference
 
+### `generate_examples.py`
+
+Builds all example outputs in one command using:
+
+- `examples/example_input.md`
+- Every stylesheet in `examples/styles/`
+
+All generated files are written to `examples/generated_html/`:
+
+- Standard outputs: `<style-name>.html`
+- Wide outputs: `<style-name>-wide.html`
+- Gallery index: `index.html`
+
+```bash
+python generate_examples.py
+```
+
 ### `build_email.py`
 
 Converts a Markdown file + CSS stylesheet into a single inline-styled HTML file ready for email clients.
@@ -149,6 +180,7 @@ Converts a Markdown file + CSS stylesheet into a single inline-styled HTML file 
 | `--markdown` | ✅ | Path to the input `.md` file |
 | `--style` | ✅ | Path to the input `.css` file |
 | `--output` | ✅ | Path to write the output `.html` file |
+| `--max-width` | ❌ | Override `body` max width (e.g. `900px`, `70ch`, `90%`) |
 
 ### `send_email.py`
 
