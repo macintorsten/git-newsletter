@@ -5,9 +5,6 @@ description: >
   activity. Invoke this agent to kick off the full pipeline. It initialises
   the session, delegates work to specialist agents via handoffs, makes
   editorial decisions, and confirms the final output to the user.
-tools:
-  - githubRepo
-  - codebase
 handoffs:
   - label: "🔍 Analyse commits & write articles"
     agent: commit-analyst

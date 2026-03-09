@@ -5,10 +5,6 @@ description: >
   repository AND writes engaging newsletter articles in a single pass.
   Invoked by newsletter-editor via handoff after the session is initialised.
   Combines the former git-researcher and commit-journalist roles.
-tools:
-  - githubRepo
-  - codebase
-  - runCommand
 handoffs:
   - label: "↩️ Return to editor — commit analysis done"
     agent: newsletter-editor
