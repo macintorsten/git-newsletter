@@ -1,0 +1,16 @@
+{
+    "name": "Markdown Mailer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "charliermarsh.ruff",
+                "ritwickdey.LiveServer"
+            ]
+        }
+    }
+}

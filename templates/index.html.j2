@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newsletter Style Gallery</title>
+  <style>
+    :root {
+      --bg: #f2f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #dbe2ea;
+      --accent: #0b63ce;
+      --accent-soft: #e8f2ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, #dbeafe 0%, transparent 40%),
+        radial-gradient(circle at 80% 0%, #e2e8f0 0%, transparent 30%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    .lead {
+      margin: 8px 0 22px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .card-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.02rem;
+    }
+
+    .card-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid #bcd6fa;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 8px 11px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .btn-wide {
+      border-color: #fbcfe8;
+      color: #9d174d;
+      background: #fdf2f8;
+    }
+
+    .previews {
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .previews section {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .previews h3 {
+      margin: 0;
+      font-size: 0.8rem;
+      padding: 7px 9px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    iframe {
+      width: 100%;
+      height: 300px;
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .previews {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Newsletter Style Gallery</h1>
+    <p class="lead">Each card includes standard and wide outputs (wide max-width: {{ wide_width }}).</p>
+    <section class="grid">
+      {% for card in cards %}
+      <article class="card">
+        <header class="card-header">
+          <h2>{{ card.title }}</h2>
+          <p>{{ card.style_file }}</p>
+        </header>
+        <div class="actions">
+          <a class="btn" href="{{ card.standard_file }}" target="_blank" rel="noopener noreferrer">Open Standard</a>
+          <a class="btn btn-wide" href="{{ card.wide_file }}" target="_blank" rel="noopener noreferrer">Open Wide</a>
+        </div>
+        <div class="previews">
+          <section>
+            <h3>Standard</h3>
+            <iframe src="{{ card.standard_file }}" title="{{ card.title }} standard"></iframe>
+          </section>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>
