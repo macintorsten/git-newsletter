@@ -43,7 +43,6 @@ python -m newsletter \
 | `--days` | `7` | Number of days to look back for commits |
 | `--stale-days` | `30` | Days of inactivity before a branch is "stale" |
 | `--output` | `newsletter_output.md` | Output Markdown file path |
-| `--db` | `newsletter_session.json` | Session database file path |
 
 ### Agent & skill definitions
 
@@ -93,8 +92,8 @@ Brief summary of the change…
 ### Extending with new sources
 
 Add a new source adapter by subclassing `newsletter.sources.base.BaseSource`
-and implementing `fetch(db)`. Future sources can include GitLab, Jenkins
-pipelines, Jira tickets, and more.
+and implementing `fetch()` (returns a plain dict). Future sources can include
+GitLab, Jenkins pipelines, Jira tickets, and more.
 
 ---
 
@@ -122,16 +121,14 @@ git-newsletter/
 │   ├── __init__.py
 │   ├── __main__.py                     ← `python -m newsletter` entry point
 │   ├── cli.py                          ← Argument parsing & main()
-│   ├── models.py                       ← Data models & session database schema
-│   ├── orchestrator.py                 ← Pipeline orchestration logic
-│   ├── session_db.py                   ← Shared session state manager
+│   ├── orchestrator.py                 ← CLI pipeline (plain dicts, no session DB)
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   └── prompts.py                  ← LLM system-prompt templates
+│   │   └── prompts.py                  ← LLM prompts + session_store SQL schema
 │   ├── skills/
 │   │   ├── __init__.py
-│   │   ├── git_skills.py               ← Git helper functions
-│   │   └── web_skills.py               ← Web search helpers
+│   │   ├── git_skills.py               ← Shim → .github/skills/git-research/git_skills.py
+│   │   └── web_skills.py               ← Shim → .github/skills/web-research/web_skills.py
 │   └── sources/
 │       ├── __init__.py
 │       ├── base.py                     ← Abstract base source
@@ -143,9 +140,13 @@ git-newsletter/
 │   │   ├── commit-journalist.yaml
 │   │   └── web-researcher.yaml
 │   └── skills/                         ← GitHub Copilot agent skills (new)
-│       ├── git-research/SKILL.md
+│       ├── git-research/
+│       │   ├── SKILL.md
+│       │   └── git_skills.py           ← Git helper (co-located with skill)
 │       ├── commit-analysis/SKILL.md
-│       ├── web-research/SKILL.md
+│       ├── web-research/
+│       │   ├── SKILL.md
+│       │   └── web_skills.py           ← Web helper (co-located with skill)
 │       └── newsletter-writing/SKILL.md
 ├── pyproject.toml
 ├── build_email.py

@@ -72,16 +72,6 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="FILE",
         help="Path for the generated Markdown newsletter (default: newsletter_output.md).",
     )
-    parser.add_argument(
-        "--db",
-        default=None,
-        metavar="FILE",
-        dest="db_path",
-        help=(
-            "Path for the session database JSON file "
-            "(default: newsletter_session.json)."
-        ),
-    )
     return parser
 
 
@@ -105,28 +95,22 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     try:
-        db = run(
+        run(
             repo_path=args.repo,
             branch=args.branch,
             period_days=args.days,
             stale_after_days=args.stale_days,
             output_path=args.output,
-            db_path=args.db_path,
         )
     except Exception as exc:
         print(f"❌ Pipeline failed: {exc}", file=sys.stderr)
         return 1
 
-    out_path = Path(db.output.output_path)
+    out_path = Path(args.output)
     if out_path.exists():
         print(f"✅ Newsletter written to: {out_path.resolve()}")
     else:
         print("⚠️  Pipeline completed but output file was not found.", file=sys.stderr)
-
-    if db.logs:
-        print("\n📋 Pipeline log:")
-        for entry in db.logs:
-            print(f"   {entry}")
 
     return 0
 

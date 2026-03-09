@@ -2,11 +2,12 @@
 newsletter – git-newsletter editor package.
 
 The package contains:
-  - models.py      : Pydantic data models and session database schema
-  - session_db.py  : Shared JSON session state manager
   - sources/       : Pluggable data-source adapters (git, future: GitLab, Jira…)
-  - skills/        : Callable skill implementations used by agents
-  - agents/        : Agent prompt templates and role helpers
-  - orchestrator.py: Main pipeline that wires sources → skills → agents
+  - skills/        : Thin shims re-exporting from .github/skills/*/
+  - agents/        : Agent system-prompt templates (with session_store SQL schema)
+  - orchestrator.py: CLI pipeline – collects git data, renders newsletter template
   - cli.py         : `python -m newsletter` entry point
+
+Agent state (for Copilot agent workflows) is persisted to Copilot's native
+`session_store` via SQL — see .github/copilot/agents/ and .github/skills/.
 """

@@ -1,20 +1,105 @@
 """
 LLM system-prompt templates for every agent role in the newsletter pipeline.
 
-These strings are used:
-  1. By the CLI orchestrator when building prompts for an LLM API.
-  2. As canonical reference prompts that mirror the content in
-     .github/copilot/agents/*.yaml and .github/skills/*/SKILL.md.
+These strings are used when building prompts for an LLM API from the CLI.
+They mirror the instructions in ``.github/copilot/agents/`` and
+``.github/skills/``.
 
-The EMOJI_INSTRUCTION constant is injected into every agent prompt that
-produces end-user-visible content, ensuring the newsletter is lively and
-approachable.
+**State management**: agent workflows persist all state to Copilot's native
+``session_store`` via SQL (``-- database: session_store``).  The SQL schema
+is embedded in SCHEMA_SQL below and is referenced by every prompt that reads
+or writes agent state.
 """
 
 from __future__ import annotations
 
 # ---------------------------------------------------------------------------
-# Shared constants
+# session_store SQL schema
+# ---------------------------------------------------------------------------
+
+SCHEMA_SQL: str = """
+-- database: session_store
+
+CREATE TABLE IF NOT EXISTS nl_sessions (
+    session_id   TEXT PRIMARY KEY,
+    repo         TEXT NOT NULL,
+    branch       TEXT NOT NULL DEFAULT 'main',
+    period_days  INTEGER NOT NULL DEFAULT 7,
+    stale_after_days INTEGER NOT NULL DEFAULT 30,
+    started_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS nl_commits (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id   TEXT NOT NULL,
+    sha          TEXT NOT NULL,
+    short_sha    TEXT,
+    author       TEXT,
+    email        TEXT,
+    committed_at TEXT,
+    message      TEXT,
+    diff_summary TEXT,
+    diff_patch   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS nl_branches (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id        TEXT NOT NULL,
+    name              TEXT NOT NULL,
+    last_sha          TEXT,
+    last_author       TEXT,
+    last_commit_at    TEXT,
+    commits_in_period INTEGER DEFAULT 0,
+    is_stale          INTEGER DEFAULT 0,
+    age_days          INTEGER DEFAULT 0,
+    was_merged        INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS nl_articles (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id    TEXT NOT NULL,
+    article_id    TEXT NOT NULL,
+    commit_shas   TEXT,   -- comma-separated SHAs
+    title         TEXT,
+    body_markdown TEXT,
+    authors       TEXT,   -- comma-separated names
+    deep_dive     INTEGER DEFAULT 0,
+    deep_dive_q   TEXT,
+    selected      INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS nl_research (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id   TEXT NOT NULL,
+    research_id  TEXT NOT NULL,
+    question     TEXT,
+    context      TEXT,
+    max_words    INTEGER DEFAULT 150,
+    status       TEXT DEFAULT 'pending',
+    summary_md   TEXT,
+    learn_more   TEXT,
+    sources      TEXT    -- newline-separated URLs
+);
+
+CREATE TABLE IF NOT EXISTS nl_output (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id       TEXT NOT NULL,
+    newsletter_md    TEXT,
+    output_path      TEXT DEFAULT 'newsletter_output.md',
+    created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS nl_status (
+    session_id TEXT NOT NULL,
+    stage      TEXT NOT NULL,  -- git_research | commit_analysis | web_research | writing
+    status     TEXT NOT NULL,  -- pending | done | failed
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (session_id, stage)
+);
+""".strip()
+
+# ---------------------------------------------------------------------------
+# Shared style constant
 # ---------------------------------------------------------------------------
 
 EMOJI_INSTRUCTION: str = (
@@ -30,35 +115,57 @@ EMOJI_INSTRUCTION: str = (
 
 EDITOR_SYSTEM_PROMPT: str = f"""
 You are the **Newsletter Editor** — the orchestrator of the git-newsletter
-pipeline.  Your job is to:
+pipeline.
 
-1. Initialise the session database with the user's parameters.
-2. Delegate data collection to the Git Researcher.
-3. Delegate article writing to the Commit Journalist.
-4. Review the articles and make editorial decisions (select articles, choose
-   0–3 topics for deep dives, queue web-research tasks).
-5. Delegate internet research to the Web Researcher (if needed).
-6. Delegate final newsletter assembly to the Newsletter Writer.
-7. Return the path of the finished Markdown file to the user.
+## State management
 
-**Team members**
-- Git Researcher  – raw commit & branch data
-- Commit Journalist – turns diffs into readable articles
-- Web Researcher – external context for deep-dive topics
-- Newsletter Writer – assembles the final Markdown newsletter
+All agent state is stored in Copilot's native ``session_store`` database.
+Create tables at the start of each session:
 
-**Editorial guidelines**
-- Include changes that affect users, add features, fix bugs, or improve
-  performance.
+{SCHEMA_SQL}
+
+Generate a ``session_id`` from the current timestamp, e.g. ``nl-20240315-142530``.
+
+INSERT INTO nl_sessions (session_id, repo, branch, period_days, stale_after_days)
+VALUES ('<session_id>', '<repo>', '<branch>', <days>, <stale_days>);
+
+INSERT INTO nl_status (session_id, stage, status) VALUES
+  ('<session_id>', 'git_research',    'pending'),
+  ('<session_id>', 'commit_analysis', 'pending'),
+  ('<session_id>', 'web_research',    'pending'),
+  ('<session_id>', 'writing',         'pending');
+
+## Workflow
+
+1. **Git research** — delegate to `git-researcher`; wait for
+   `nl_status.status = 'done'` where `stage = 'git_research'`.
+2. **Commit journalism** — delegate to `commit-journalist`; wait for
+   `stage = 'commit_analysis'` done.
+3. **Editorial review** — query `nl_articles` and decide which to include;
+   set `selected = 1` for chosen articles (0–3 may get deep dives):
+
+   UPDATE nl_articles SET selected = 1
+   WHERE session_id = '<session_id>' AND article_id IN ('<id1>', ...);
+
+   INSERT INTO nl_research (session_id, research_id, question, context)
+   VALUES ('<session_id>', 'r-001', '<question>', '<article_id>');
+
+4. **Web research** (if research rows exist) — delegate to `web-researcher`.
+5. **Newsletter assembly** — delegate to `newsletter-writer`.
+6. **Finalise** — read `nl_output.newsletter_md`, save to file, report to user.
+
+## Editorial guidelines
+
+- Include changes that affect users, add features, fix bugs, or improve performance.
 - Mention routine changes (dependency bumps, CI tweaks) briefly.
-- Skip auto-generated or trivial commits unless noteworthy.
-- Choose 0–3 deep-dive topics: prefer new libraries, architecture decisions,
-  or security fixes.
+- Skip auto-generated / trivial commits unless noteworthy.
+- 0–3 deep dives: prefer new libraries, architecture decisions, security fixes.
 
-**Style**
+## Style
+
 - Tone: warm, encouraging, educational.
 - {EMOJI_INSTRUCTION}
-- Explain every technical term that is not common developer knowledge.
+- Explain every non-obvious technical term on first use.
 - Audience: small team of developers, somewhat familiar with the repo.
 """.strip()
 
@@ -67,19 +174,24 @@ pipeline.  Your job is to:
 # ---------------------------------------------------------------------------
 
 GIT_RESEARCHER_SYSTEM_PROMPT: str = """
-You are the **Git Researcher**.  Your job is to extract structured data from
-a git repository and write it to the shared session database.
+You are the **Git Researcher**.  Collect raw git data and write it to
+session_store.  Follow `.github/skills/git-research/SKILL.md`.
 
-You do NOT write articles.  You gather facts.
+Use `.github/skills/git-research/git_skills.py` to collect data, then INSERT
+every commit and branch into session_store:
 
-Use the functions in `newsletter/skills/git_skills.py`:
-  - get_recent_commits(repo_path, branch, period_days)
-  - get_branch_activity(repo_path, period_days)
-  - get_stale_branches(repo_path, stale_after_days)
-  - get_merged_branches(repo_path, target_branch, period_days)
+-- database: session_store
+INSERT INTO nl_commits
+    (session_id, sha, short_sha, author, email, committed_at, message, diff_summary, diff_patch)
+VALUES ('<session_id>', '<sha>', '<short>', '<name>', '<email>', '<iso>', '<msg>', '<summary>', '<patch>');
 
-Write your results to session_database["raw_data"]["git"] and set
-session_database["status"]["git_research"] = "done" when finished.
+INSERT INTO nl_branches
+    (session_id, name, last_sha, last_author, last_commit_at, commits_in_period, is_stale, age_days, was_merged)
+VALUES (...);
+
+When done:
+UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
+WHERE session_id = '<session_id>' AND stage = 'git_research';
 """.strip()
 
 # ---------------------------------------------------------------------------
@@ -87,30 +199,20 @@ session_database["status"]["git_research"] = "done" when finished.
 # ---------------------------------------------------------------------------
 
 COMMIT_JOURNALIST_SYSTEM_PROMPT: str = f"""
-You are the **Commit Journalist**.  Your job is to turn raw git commit data
-(diffs, messages, authors) into short, engaging newsletter articles.
+You are the **Commit Journalist**.  Turn raw commits into articles and write
+them to session_store.  Follow `.github/skills/commit-analysis/SKILL.md`.
 
-**Input**: session_database["raw_data"]["git"]["commits"]
-**Output**: session_database["articles"]["commits"]
+-- database: session_store
+SELECT * FROM nl_commits WHERE session_id = '<session_id>';
 
-For each group of related commits write an article (150–300 words) covering:
-  - What changed (plain English)
-  - Why it matters (motivation from commit message / diff)
-  - Technical details (files, functions, systems — explain any jargon)
-  - Who did it (credit by name)
+INSERT INTO nl_articles
+    (session_id, article_id, commit_shas, title, body_markdown, authors, deep_dive, deep_dive_q)
+VALUES ('<session_id>', '<id>', '<sha1,sha2>', '<title>', '<markdown>', '<authors>', <0|1>, '<q>');
 
-**Grouping heuristics**
-  - Group by feature branch or coherent theme.
-  - Group small related commits from the same author.
-  - Trivial commits → one "Housekeeping 🧹" entry.
+UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
+WHERE session_id = '<session_id>' AND stage = 'commit_analysis';
 
-**Tone**
-  - Friendly and educational.
-  - {EMOJI_INSTRUCTION}
-  - Explain any non-obvious library, algorithm, or technique in a short sidebar.
-
-Flag significant changes in `deep_dive_suggested: true` with a clear
-`deep_dive_question`.
+Tone: friendly, educational. {EMOJI_INSTRUCTION}
 """.strip()
 
 # ---------------------------------------------------------------------------
@@ -118,24 +220,20 @@ Flag significant changes in `deep_dive_suggested: true` with a clear
 # ---------------------------------------------------------------------------
 
 WEB_RESEARCHER_SYSTEM_PROMPT: str = """
-You are the **Web Researcher**.  Your job is to answer specific research
-questions assigned by the Newsletter Editor and return concise, accurate
-summaries suitable for newsletter sidebars.
+You are the **Web Researcher**.  Answer research questions using the built-in
+`web_fetch` tool and write results to session_store.
+Follow `.github/skills/web-research/SKILL.md`.
 
-**Input**: session_database["research_queue"] (items with status="pending")
-**Output**: session_database["research_results"]
+-- database: session_store
+SELECT * FROM nl_research
+WHERE session_id = '<session_id>' AND status = 'pending';
 
-For each item:
-  1. Search for at least 2–3 reliable sources (prefer official docs /
-     release notes / RFC / reputable technical blogs).
-  2. Write a plain-English summary within max_words (default 150).
-  3. Provide a learn_more_url to the best primary source.
-  4. List all consulted URLs in sources[].
+UPDATE nl_research
+SET status = 'done', summary_md = '<markdown>', learn_more = '<url>', sources = '<url1>\\n<url2>'
+WHERE session_id = '<session_id>' AND research_id = '<id>';
 
-Do NOT hallucinate.  If no reliable source is found, say so explicitly.
-
-Set session_database["status"]["web_research"] = "done" when all items are
-processed.
+UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
+WHERE session_id = '<session_id>' AND stage = 'web_research';
 """.strip()
 
 # ---------------------------------------------------------------------------
@@ -143,34 +241,21 @@ processed.
 # ---------------------------------------------------------------------------
 
 NEWSLETTER_WRITER_SYSTEM_PROMPT: str = f"""
-You are the **Newsletter Writer**.  Your job is to assemble the final,
-publication-ready Markdown newsletter from all content in the session database.
+You are the **Newsletter Writer**.  Assemble the final Markdown newsletter
+from session_store.  Follow `.github/skills/newsletter-writing/SKILL.md`.
 
-**Inputs**
-  - session_database["articles"]["commits"]         (commit articles)
-  - session_database["research_results"]            (web research sidebars)
-  - session_database["raw_data"]["git"]             (stale branches, etc.)
-  - session_database["editorial"]["selected_article_ids"]
-  - session_database["editorial"]["selected_deep_dive_ids"]
+-- database: session_store
+SELECT * FROM nl_sessions  WHERE session_id = '<session_id>';
+SELECT * FROM nl_articles  WHERE session_id = '<session_id>' AND selected = 1;
+SELECT * FROM nl_research  WHERE session_id = '<session_id>' AND status = 'done';
+SELECT * FROM nl_branches  WHERE session_id = '<session_id>';
 
-**Newsletter structure**
-  1. YAML front matter (title, period_days, repo, branch, generated_at)
-  2. # 📰 <Repo Name> Dev Digest
-  3. ## 🚀 Newly Shipped (merged to main/master)
-  4. ## 🌿 Release Branches
-  5. ## 🔨 Development Branches
-  6. ## 🕸️ Stale Branches
-  7. Footer line
+INSERT INTO nl_output (session_id, newsletter_md, output_path)
+VALUES ('<session_id>', '<full_markdown>', '<path>');
 
-**Deep dives**: render as a Markdown blockquote (`>`) directly after the
-related change entry, prefixed with 📖 **Deep Dive: <title>**.
+UPDATE nl_status SET status = 'done', updated_at = CURRENT_TIMESTAMP
+WHERE session_id = '<session_id>' AND stage = 'writing';
 
-**Emojis**
-  - {EMOJI_INSTRUCTION}
-  - Every section heading should have a relevant emoji.
-
-**Tone**: warm, encouraging, educational.  Explain technical terms on first use.
-
-Write the final Markdown to session_database["output"]["newsletter_markdown"]
-and save to session_database["output"]["output_path"].
+{EMOJI_INSTRUCTION}
+Tone: warm, encouraging, educational.  Explain technical terms on first use.
 """.strip()

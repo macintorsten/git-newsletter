@@ -1,33 +1,72 @@
 """
-Orchestrator – main pipeline that wires sources → skills → agents.
+CLI orchestrator – wires git data collection → Markdown newsletter.
 
-This module coordinates the full newsletter-generation pipeline without
-requiring an external LLM API.  When used with an LLM it passes the agent
-system prompts from ``newsletter.agents.prompts`` to the model.
+This module is used by the ``python -m newsletter`` CLI only.  It has no
+dependency on a Python session database; all state is plain dicts kept in
+memory for the duration of the run.
 
-The orchestrator can also be used in *tool-only* mode (no LLM), where it
-runs the git data collection and produces a structured session database that
-a human editor (or a VS Code Copilot agent) can then use to write the
-newsletter.
+For **agent workflows** (VS Code Copilot, GitHub Copilot coding agent) state
+is persisted to Copilot's native ``session_store`` via SQL — see the agent
+definitions in ``.github/copilot/agents/`` and the skill instructions in
+``.github/skills/``.
 """
 
 from __future__ import annotations
 
-import textwrap
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from newsletter.models import SessionDatabase, SessionMetadata
-from newsletter.sources.git_source import GitSource
-import newsletter.session_db as session_db
+from newsletter.sources.git_source import fetch as git_fetch
 
 
 # ---------------------------------------------------------------------------
-# Newsletter template (used when no LLM is available)
+# Newsletter template helpers
 # ---------------------------------------------------------------------------
 
-_NEWSLETTER_TEMPLATE = """\
+def _fmt_merged(merged: list[str]) -> str:
+    if not merged:
+        return "_No branches were merged in this period._ 🕊️"
+    return "\n".join(f"- ✅ `{b}`" for b in merged)
+
+
+def _fmt_branches(activity: list[dict[str, Any]], period_days: int) -> str:
+    lines = [
+        f"- {'🌿' if b['name'].startswith('release') else '🔨'} "
+        f"**`{b['name']}`** — {b['commits_in_period']} commit(s) in the last "
+        f"{period_days} day(s). Last commit by *{b['last_author']}* "
+        f"({b['last_commit_timestamp'][:10]})."
+        for b in activity
+        if b.get("commits_in_period", 0) > 0
+    ]
+    return "\n".join(lines) if lines else "_No active branches in this period._ 🤫"
+
+
+def _fmt_stale(stale: list[dict[str, Any]]) -> str:
+    if not stale:
+        return "_No stale branches detected._ 🎉"
+    return "\n".join(
+        f"- ⚠️ **`{b['name']}`** — last activity {b['age_days']} days ago "
+        f"by *{b['last_author']}* ({b['last_commit_timestamp'][:10]}). "
+        "Consider merging or deleting."
+        for b in stale
+    )
+
+
+def _fmt_commits(commits: list[dict[str, Any]]) -> str:
+    if not commits:
+        return "_No commits found in this period._ 🕊️"
+    lines = [
+        f"- 🔹 `{c['short_sha']}` **{c['message'].splitlines()[0][:80]}** "
+        f"— *{c['author_name']}* ({c['timestamp'][:10]})"
+        for c in commits[:20]
+    ]
+    if len(commits) > 20:
+        lines.append(f"- … and {len(commits) - 20} more commit(s).")
+    return "\n".join(lines)
+
+
+_TEMPLATE = """\
 ---
 title: "{repo} Dev Digest — {date_range}"
 period_days: {period_days}
@@ -70,59 +109,6 @@ generated_at: "{generated_at}"
 """
 
 
-def _fmt_merged(merged: list[str]) -> str:
-    if not merged:
-        return "_No branches were merged in this period._ 🕊️"
-    lines = [f"- ✅ `{b}`" for b in merged]
-    return "\n".join(lines)
-
-
-def _fmt_branches(activity: list[dict[str, Any]], period_days: int) -> str:
-    if not activity:
-        return "_No branch activity detected in this period._ 🤫"
-    lines: list[str] = []
-    for b in activity:
-        count = b.get("commits_in_period", 0)
-        if count == 0:
-            continue
-        emoji = "🌿" if b["name"].startswith("release") else "🔨"
-        lines.append(
-            f"- {emoji} **`{b['name']}`** — {count} commit(s) in the last "
-            f"{period_days} day(s). Last commit by *{b['last_author']}* "
-            f"({b['last_commit_timestamp'][:10]})."
-        )
-    return "\n".join(lines) if lines else "_No active branches in this period._ 🤫"
-
-
-def _fmt_stale(stale: list[dict[str, Any]]) -> str:
-    if not stale:
-        return "_No stale branches detected._ 🎉"
-    lines: list[str] = []
-    for b in stale:
-        lines.append(
-            f"- ⚠️ **`{b['name']}`** — last activity {b['age_days']} days ago "
-            f"by *{b['last_author']}* ({b['last_commit_timestamp'][:10]}). "
-            f"Consider merging or deleting."
-        )
-    return "\n".join(lines)
-
-
-def _fmt_commits_summary(commits: list[dict[str, Any]]) -> str:
-    """Produce a simple bulleted commit list for the tool-only newsletter."""
-    if not commits:
-        return "_No commits found in this period._ 🕊️"
-    lines: list[str] = []
-    for c in commits[:20]:  # cap to avoid very long newsletters
-        short_msg = c["message"].splitlines()[0][:80]
-        lines.append(
-            f"- 🔹 `{c['short_sha']}` **{short_msg}** "
-            f"— *{c['author_name']}* ({c['timestamp'][:10]})"
-        )
-    if len(commits) > 20:
-        lines.append(f"- … and {len(commits) - 20} more commit(s).")
-    return "\n".join(lines)
-
-
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -133,93 +119,47 @@ def run(
     period_days: int = 7,
     stale_after_days: int = 30,
     output_path: str = "newsletter_output.md",
-    db_path: str | None = None,
-) -> SessionDatabase:
+) -> str:
     """
-    Run the full newsletter pipeline in *tool-only* mode (no LLM required).
+    Run the CLI newsletter pipeline for *repo_path* and return the generated
+    Markdown as a string.  The Markdown is also written to *output_path*.
 
-    Steps:
-      1. Initialise session database.
-      2. Run GitSource to collect raw data.
-      3. Build a Markdown newsletter from the raw data using a simple template.
-      4. Save the newsletter and session database.
-
-    Returns the populated ``SessionDatabase``.
+    Both local paths and remote URLs are accepted for *repo_path*.
     """
-    db = SessionDatabase(
-        metadata=SessionMetadata(
-            repo=repo_path,
-            branch=branch,
-            period_days=period_days,
-            stale_after_days=stale_after_days,
-            generated_at=datetime.now(timezone.utc).isoformat(),
-        )
-    )
-    db.output.output_path = output_path
+    git_data = git_fetch(repo_path, branch, period_days, stale_after_days)
 
-    session_db.log(db, "Orchestrator: starting pipeline.")
-
-    # Step 1 – Git research
-    source = GitSource(
-        config={
-            "repo_path": repo_path,
-            "branch": branch,
-            "period_days": period_days,
-            "stale_after_days": stale_after_days,
-        }
-    )
-    try:
-        source.fetch(db)
-    except Exception as exc:
-        db.status.git_research = "failed"
-        session_db.log(db, f"GitSource failed: {exc}")
-
-    # Step 2 – Build newsletter from template (tool-only mode)
-    git_data = db.raw_data.git or {}
     now = datetime.now(timezone.utc)
-    from_date = (now.replace(microsecond=0) - __import__("datetime").timedelta(days=period_days))
-    date_range = f"{from_date.strftime('%b %d')} – {now.strftime('%b %d, %Y')}"
-
+    from_dt = now - timedelta(days=period_days)
+    date_range = f"{from_dt.strftime('%b %d')} – {now.strftime('%b %d, %Y')}"
     repo_display = Path(repo_path).name or repo_path
 
-    newsletter_md = _NEWSLETTER_TEMPLATE.format(
+    release_branches = [
+        b for b in git_data["branch_activity"]
+        if b["name"].startswith("release")
+    ]
+    dev_branches = [
+        b for b in git_data["branch_activity"]
+        if not b["name"].startswith("release") and b["name"] != branch
+    ]
+
+    newsletter_md = _TEMPLATE.format(
         repo=repo_display,
         date_range=date_range,
         period_days=period_days,
         branch=branch,
         generated_at=now.isoformat(),
-        merged_section=_fmt_merged(git_data.get("merged_branches", [])),
-        release_section=_fmt_branches(
-            [
-                b for b in git_data.get("branch_activity", [])
-                if b["name"].startswith("release")
-            ],
-            period_days,
+        merged_section=_fmt_merged(git_data["merged_branches"]),
+        release_section=_fmt_branches(release_branches, period_days),
+        dev_section=(
+            _fmt_commits(git_data["commits"])
+            + "\n\n"
+            + _fmt_branches(dev_branches, period_days)
         ),
-        dev_section=_fmt_commits_summary(git_data.get("commits", []))
-        + "\n\n"
-        + _fmt_branches(
-            [
-                b for b in git_data.get("branch_activity", [])
-                if not b["name"].startswith("release")
-                and b["name"] != branch
-            ],
-            period_days,
-        ),
-        stale_section=_fmt_stale(git_data.get("stale_branches", [])),
+        stale_section=_fmt_stale(git_data["stale_branches"]),
     )
 
-    db.output.newsletter_markdown = newsletter_md
-    db.status.newsletter_writing = "done"
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(newsletter_md, encoding="utf-8")
 
-    # Step 3 – Save newsletter file
-    out_path = Path(output_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(newsletter_md, encoding="utf-8")
-    session_db.log(db, f"Newsletter written to {out_path}.")
-
-    # Step 4 – Save session database
-    saved_db_path = session_db.save(db, db_path)
-    session_db.log(db, f"Session database saved to {saved_db_path}.")
-
-    return db
+    return newsletter_md

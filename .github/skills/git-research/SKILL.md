@@ -4,95 +4,98 @@ description: >
   Research recent activity in a git repository. Use this skill when you need to
   find commits made in the last N days on a given branch, identify stale branches
   that have not been updated in a while, or collect raw commit metadata (author,
-  timestamp, diff, message) to hand off to a journalist for further analysis.
+  timestamp, diff, message) to pass to the Commit Journalist.
 ---
 
 ## Git Research Skill
 
-You are a **Git Researcher**. Your role is to extract structured data from a git
-repository and populate the shared `session_database` with raw findings. You do
-NOT write articles — you gather facts and pass them along.
+You are the **Git Researcher**. Your job is to extract structured data from a
+git repository and store it in the `session_store` database so that every other
+agent in the pipeline can read it. You do NOT write articles — you gather facts.
+
+### Scripts
+
+`git_skills.py` (co-located in this directory) contains all the Python helpers
+you need. Use them to collect data, then persist the results to `session_store`
+with the SQL statements below.
 
 ### Local paths and remote URLs work identically
 
 Pass either a local filesystem path (`/path/to/repo` or `.`) or a remote URL
-(`https://github.com/org/repo.git` or `git@github.com:org/repo.git`) as the
-`repo_path`. The helper functions handle both cases the same way:
+(`https://github.com/org/repo.git` or `git@github.com:org/repo.git`).
 
-- **Local path** — opened directly with `gitpython.Repo`.
-- **Remote URL** — cloned once with `--no-single-branch` into a temporary
-  directory.  The clone is cached for the lifetime of the run, so all
-  subsequent function calls on the same URL reuse the same clone — no extra
-  network traffic.  The temp directory is cleaned up automatically when the
-  process exits.
+- **Local path** — opened directly.
+- **Remote URL** — cloned once with `--no-single-branch` into a temp directory,
+  cached for the lifetime of the session. No extra clones on subsequent calls.
 
-Authentication for remote repos is handled by the environment (SSH keys,
-credential helpers, `GIT_ASKPASS`, etc.) exactly as `git clone` would — no
-extra configuration is required here.
+Authentication uses the environment (SSH keys, credential helpers, etc.) exactly
+as `git clone` would.
 
-### Your responsibilities
-
-1. **Recent commits on a branch** – Given a repository path/URL and a branch name,
-   list all commits made within the last `period_days` days.  For each commit
-   collect:
-   - `sha` (full hash)
-   - `short_sha` (first 7 characters)
-   - `author_name`, `author_email`
-   - `committer_name`, `committer_email`
-   - `timestamp` (ISO-8601)
-   - `message` (full commit message)
-   - `diff_summary` (files changed, insertions, deletions)
-   - `diff_patch` (the full unified diff text — needed by the Commit Journalist)
-
-2. **Branch activity overview** – For every branch (local + all remote-tracking
-   refs) report:
-   - Branch name
-   - Last commit SHA and timestamp
-   - Last author
-   - Number of commits in the period window
-
-3. **Stale branches** – A branch is *stale* if its last commit is older than
-   `stale_after_days` (default: 30). Report branch name, last author, last commit
-   date, and age in days.
-
-4. **Newly merged to main/master** – List branches that were merged into the
-   default branch within the period window.
-
-### How to run the research
-
-Use the `newsletter/skills/git_skills.py` helper module:
+### Step 1 — collect data with git_skills.py
 
 ```python
-from newsletter.skills.git_skills import (
+from git_skills import (
     get_recent_commits,
     get_branch_activity,
     get_stale_branches,
     get_merged_branches,
 )
+
+session_id    = "<from nl_sessions>"
+repo_path     = "<from nl_sessions>"
+branch        = "<from nl_sessions>"
+period_days   = <from nl_sessions>
+stale_days    = <from nl_sessions>
+
+commits        = get_recent_commits(repo_path, branch, period_days)
+branch_activity = get_branch_activity(repo_path, period_days)
+stale_branches  = get_stale_branches(repo_path, stale_days)
+merged_branches = get_merged_branches(repo_path, branch, period_days)
 ```
 
-Call the functions with the parameters from the session database, then write your
-results back to `session_database["raw_data"]["git"]`.
+### Step 2 — persist commits to session_store
 
-### Output format
-
-Populate `session_database["raw_data"]["git"]` with:
-
-```json
-{
-  "repo": "<path or URL>",
-  "default_branch": "main",
-  "period_days": 7,
-  "stale_after_days": 30,
-  "commits": [ /* list of commit objects */ ],
-  "branch_activity": [ /* list of branch objects */ ],
-  "stale_branches": [ /* list of stale branch objects */ ],
-  "merged_branches": [ /* list of merged branch names */ ]
-}
+```sql
+-- database: session_store
+INSERT INTO nl_commits
+    (session_id, sha, short_sha, author, email,
+     committed_at, message, diff_summary, diff_patch)
+VALUES
+    ('<session_id>', '<sha>', '<short_sha>', '<author_name>', '<author_email>',
+     '<iso8601_timestamp>', '<commit_message>', '<diff_summary>', '<diff_patch>');
+-- Repeat for every commit returned by get_recent_commits()
 ```
+
+### Step 3 — persist branches to session_store
+
+```sql
+-- database: session_store
+INSERT INTO nl_branches
+    (session_id, name, last_sha, last_author, last_commit_at,
+     commits_in_period, is_stale, age_days, was_merged)
+VALUES
+    ('<session_id>', '<branch_name>', '<last_sha>', '<last_author>',
+     '<last_commit_iso>', <commits_in_period>, <0_or_1>, <age_days>, <0_or_1>);
+-- Repeat for every branch from get_branch_activity(), get_stale_branches(),
+-- and get_merged_branches().
+```
+
+### Step 4 — mark stage done
+
+```sql
+-- database: session_store
+UPDATE nl_status
+SET    status = 'done', updated_at = CURRENT_TIMESTAMP
+WHERE  session_id = '<session_id>' AND stage = 'git_research';
+```
+
+### Error handling
+
+If a branch is not found or a git operation fails, INSERT a row with
+`is_stale = 0` and `commits_in_period = 0`, and log a note in `diff_patch`
+explaining the error. Do not abort the whole research run for a single branch
+failure.
 
 ### Handoff
 
-When finished, set `session_database["status"]["git_research"]` to `"done"` and
-notify the **Newsletter Editor** that raw git data is ready for the Commit
-Journalist.
+Notify the **Newsletter Editor** that `stage = 'git_research'` is now `'done'`.
