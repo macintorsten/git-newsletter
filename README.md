@@ -127,8 +127,7 @@ git-newsletter/
 │   │   └── prompts.py                  ← LLM prompts + session_store SQL schema
 │   ├── skills/
 │   │   ├── __init__.py
-│   │   ├── git_skills.py               ← Shim → .github/skills/git-research/git_skills.py
-│   │   └── web_skills.py               ← Shim → .github/skills/web-research/web_skills.py
+│   │   └── git_skills.py               ← Shim → .github/skills/git-research/git_skills.py
 │   └── sources/
 │       ├── __init__.py
 │       ├── base.py                     ← Abstract base source
@@ -145,8 +144,7 @@ git-newsletter/
 │       │   └── git_skills.py           ← Git helper (co-located with skill)
 │       ├── commit-analysis/SKILL.md
 │       ├── web-research/
-│       │   ├── SKILL.md
-│       │   └── web_skills.py           ← Web helper (co-located with skill)
+│       │   └── SKILL.md                ← Uses built-in web_fetch tool
 │       └── newsletter-writing/SKILL.md
 ├── pyproject.toml
 ├── build_email.py

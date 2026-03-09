@@ -14,10 +14,7 @@ instructions: |
   ## Tools
 
   - **Built-in `web_fetch`** — use this directly to retrieve web pages.
-    It returns clean, already-processed content. Prefer it over any custom
-    Python implementation.
-  - `.github/skills/web-research/web_skills.py` — `search_web()` and
-    `fetch_page()` are available as CLI fallbacks only.
+    It returns clean, already-processed content.
 
   ## Inputs (from session_store)
 

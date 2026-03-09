@@ -12,11 +12,5 @@ dependencies = [
     "gitpython>=3.1.40",
 ]
 
-[project.optional-dependencies]
-# Install these for richer web-research capabilities
-web = [
-    "requests>=2.31.0",
-]
-
 [project.scripts]
 newsletter = "newsletter.cli:main"

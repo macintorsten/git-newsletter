@@ -18,10 +18,6 @@ so the Newsletter Writer can use them as newsletter sidebars.
 Use the built-in **`web_fetch`** tool to retrieve web pages. It returns clean,
 already-processed content — no need to parse HTML yourself.
 
-`web_skills.py` (co-located in this directory) provides `search_web()` and
-`fetch_page()` as **CLI fallbacks only**. In the agent runtime, prefer
-`web_fetch` directly.
-
 ### Step 1 — read pending research tasks
 
 ```sql
