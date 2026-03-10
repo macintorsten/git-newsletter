@@ -44,14 +44,14 @@ Files:
 - `.github/agents/newsletter-editor.agent.md`
 
 Tasks:
-- [ ] Add explicit stage lifecycle values: `pending -> done | failed | skipped`.
-- [ ] Define when `web_research` is `skipped` (no queued deep dives).
-- [ ] Clarify terminal behavior when any stage is `failed`.
-- [ ] Add concise polling/retry note for orchestrator.
+- [x] Add explicit stage lifecycle values: `pending -> done | failed | skipped`.
+- [x] Define when `web_research` is `skipped` (no queued deep dives).
+- [x] Clarify terminal behavior when any stage is `failed`.
+- [x] Add concise polling/retry note for orchestrator.
 
 Acceptance criteria:
-- [ ] Flow doc and orchestrator agree on identical statuses.
-- [ ] No ambiguous stage transitions remain.
+- [x] Flow doc and orchestrator agree on identical statuses.
+- [x] No ambiguous stage transitions remain.
 
 ---
 
@@ -221,7 +221,7 @@ Rationale:
 ## Progress Tracker
 
 - [~] Plan document created
-- [ ] Chunk 1 merged
+- [~] Chunk 1 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged
 - [ ] Chunk 4 merged

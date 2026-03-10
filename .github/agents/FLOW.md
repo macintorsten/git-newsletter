@@ -87,7 +87,24 @@ All stages are tracked in `session_store`:
 | `web_research`    | web-researcher  | Deep-dive summaries written        |
 | `writing`         | newsletter-writer | Final Markdown assembled         |
 
-Each stage follows the lifecycle: `pending` → `done` (or `failed`).
+Each stage follows the lifecycle: `pending` → `done | failed | skipped`.
+
+Status semantics:
+
+- `done`: stage completed successfully.
+- `failed`: stage hit a terminal error and requires operator intervention
+        or a targeted rerun.
+- `skipped`: stage intentionally not run (for example, `web_research` when
+        no deep-dive rows are queued).
+
+Terminal behavior:
+
+- If any required stage (`commit_analysis`, `writing`) is `failed`, the run is
+        terminal and should not proceed to finalisation.
+- If `web_research` is `skipped`, the pipeline may proceed directly to
+        `writing`.
+- Orchestrator polling should tolerate transient tool/database failures with
+        short retries before marking a stage `failed`.
 
 ## Handoff summary
 

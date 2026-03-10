@@ -158,8 +158,15 @@ INSERT INTO nl_status (session_id, stage, status) VALUES
 
 3. **Web research** — if any `nl_research` rows were inserted, use the
    **🌐 Research deep-dive topics** handoff to delegate to `web-researcher`.
-   Poll `stage = 'web_research'`. Skip this step if no deep dives were
-   requested.
+  Poll `stage = 'web_research'`. If no deep dives were requested, set
+  `web_research = 'skipped'` and proceed directly to writing.
+
+  ```sql
+  -- database: session_store
+  UPDATE nl_status
+  SET status = 'skipped', updated_at = CURRENT_TIMESTAMP
+  WHERE session_id = '<session_id>' AND stage = 'web_research';
+  ```
 
 ### Parallelism policy
 
@@ -178,6 +185,23 @@ INSERT INTO nl_status (session_id, stage, status) VALUES
    -- database: session_store
    SELECT output_path FROM nl_output WHERE session_id = '<session_id>';
    ```
+
+## Stage status contract
+
+Use these values consistently in `nl_status.status`:
+
+- `pending`: stage queued and not yet complete.
+- `done`: stage completed successfully.
+- `failed`: stage encountered a terminal error.
+- `skipped`: stage intentionally not run.
+
+Failure and polling behavior:
+
+- If `commit_analysis` or `writing` becomes `failed`, stop orchestration and
+  return a concise failure summary.
+- `web_research = 'skipped'` is valid when no deep-dive tasks were queued.
+- During polling, retry transient SQL/tool failures briefly (2-3 attempts)
+  before marking a stage `failed`.
 
 ## Editorial guidelines
 
