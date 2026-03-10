@@ -200,7 +200,8 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 
 # Generated example previews
-examples/generated_html/
+preview_output/generated_html/
+preview_output/ready_to_send.html
 .cursorignore
 .cursorindexingignore
 

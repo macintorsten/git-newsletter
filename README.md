@@ -84,9 +84,9 @@ These scripts do not call Copilot. They are optional post-processing tools.
 
 ```bash
 uv run python build_email.py \
-  --markdown examples/example_input.md \
-  --style examples/styles/01-clean-blue.css \
-  --output examples/ready_to_send.html
+  --markdown samples/email/example_input.md \
+  --style assets/email/styles/01-clean-blue.css \
+  --output preview_output/ready_to_send.html
 ```
 
 2. Generate all preview examples:
@@ -95,13 +95,13 @@ uv run python build_email.py \
 uv run python generate_examples.py
 ```
 
-Open `examples/generated_html/index.html` in your browser and click through the generated files.
+Open `preview_output/generated_html/index.html` in your browser and click through the generated files.
 
 3. Send over SMTP (optional):
 
 ```bash
 uv run python send_email.py \
-  --html examples/ready_to_send.html \
+  --html preview_output/ready_to_send.html \
   --to recipient@example.com \
   --subject "Automated Markdown Newsletter"
 ```

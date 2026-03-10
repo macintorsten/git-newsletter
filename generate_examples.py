@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate standard + wide example HTML previews and a single index.
 
-All output files are written into examples/generated_html/.
+All output files are written into preview_output/generated_html/.
 """
 
 from __future__ import annotations
@@ -14,11 +14,11 @@ from jinja2 import Environment, FileSystemLoader
 
 
 ROOT = Path(__file__).resolve().parent
-PYTHON_EXE = "/usr/local/bin/python"
-MARKDOWN_FILE = ROOT / "examples/example_input.md"
-STYLES_DIR = ROOT / "examples/styles"
-OUTPUT_DIR = ROOT / "examples/generated_html"
-INDEX_TEMPLATE = ROOT / "templates/index.html.j2"
+PYTHON_EXE = sys.executable
+MARKDOWN_FILE = ROOT / "samples/email/example_input.md"
+STYLES_DIR = ROOT / "assets/email/styles"
+OUTPUT_DIR = ROOT / "preview_output/generated_html"
+INDEX_TEMPLATE = ROOT / "assets/email/templates/index.html.j2"
 WIDE_WIDTH = "700px"
 
 
