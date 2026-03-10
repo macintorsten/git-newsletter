@@ -9,7 +9,7 @@ uses `uv` for lightning-fast dependency management.
 
 ## 🌐 Live Theme Gallery
 
-Browse all 10 email themes in both standard and wide formats without cloning the repository:
+Browse all email themes in both standard and wide formats without cloning the repository:
 
 👉 **[View Live Demo on GitHub Pages](https://macintorsten.github.io/git-newsletter/)**
 
