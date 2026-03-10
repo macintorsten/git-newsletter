@@ -143,17 +143,24 @@ Swap `01-clean-blue.css` for any other style from `examples/styles/` to change t
 
 ### 3. Send the Email
 
-Create a `.env` file in the root directory with your SMTP credentials:
+Copy the provided template to create your `.env` file, then fill in your real SMTP credentials:
+
+```bash
+cp .env.example .env
+```
+
+The template (`.env.example`) looks like this:
 
 ```dotenv
 SMTP_SERVER=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=your_email@example.com
-SMTP_PASS=your_app_password
+SMTP_PASS=your_app_password_here
 SENDER_EMAIL=your_email@example.com
 ```
 
-> **Important:** The `.env` file is listed in `.gitignore` and will never be committed.
+> **Important:** `.env.example` is safe to commit — it contains only placeholder values.  
+> The actual `.env` file is listed in `.gitignore` and will never be committed.
 
 Then, run the sender script through Docker:
 
