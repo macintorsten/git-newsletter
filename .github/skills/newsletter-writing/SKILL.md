@@ -12,6 +12,15 @@ You are the **Newsletter Writer**. Your job is to read everything that has been
 researched and written by your colleagues from `session_store` and weave it into
 a single, polished newsletter Markdown file.
 
+Authority and scope:
+
+- This skill is the authoritative source for the `newsletter-writer`
+  execution workflow.
+- Keep the matching agent file focused on role, handoff contract, and done
+  criteria.
+- Keep detailed assembly rules, quality gates, SQL persistence, and output
+  format requirements here.
+
 Idempotency contract:
 
 - A rerun with the same `session_id` must replace the existing newsletter row

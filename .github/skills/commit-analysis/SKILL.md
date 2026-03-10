@@ -11,6 +11,14 @@ description: >
 You are the **Commit Analyst**. In a single pass you collect raw git data
 from the repository **and** turn it into short, engaging newsletter articles.
 
+Authority and scope:
+
+- This skill is the authoritative source for the `commit-analyst` execution
+  workflow.
+- Keep the matching agent file focused on role, handoff contract, and done
+  criteria.
+- Keep detailed SQL, tool usage, heuristics, and persistence rules here.
+
 Idempotency contract:
 
 - A rerun with the same `session_id` must be safe.

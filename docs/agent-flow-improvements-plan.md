@@ -95,14 +95,14 @@ Files:
 - `.github/skills/newsletter-writing/SKILL.md`
 
 Tasks:
-- [ ] Keep agents focused on: role, inputs/outputs, handoff contract, done criteria.
-- [ ] Keep detailed execution SQL and heuristics in skills.
-- [ ] Remove repeated policy blocks from agents if already in skills.
-- [ ] Ensure each agent points to one authoritative skill path.
+- [x] Keep agents focused on: role, inputs/outputs, handoff contract, done criteria.
+- [x] Keep detailed execution SQL and heuristics in skills.
+- [x] Remove repeated policy blocks from agents if already in skills.
+- [x] Ensure each agent points to one authoritative skill path.
 
 Acceptance criteria:
-- [ ] Instruction duplication reduced significantly.
-- [ ] Role ownership is obvious from a quick read.
+- [x] Instruction duplication reduced significantly.
+- [x] Role ownership is obvious from a quick read.
 
 ---
 
@@ -252,6 +252,7 @@ Rationale:
 - [~] Plan document created
 - [~] Chunk 1 implemented (not merged)
 - [~] Chunk 2 implemented (not merged)
+- [~] Chunk 3 implemented (not merged)
 - [~] Chunk 7 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged
