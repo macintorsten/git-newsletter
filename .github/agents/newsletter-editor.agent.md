@@ -83,7 +83,8 @@ CREATE TABLE IF NOT EXISTS nl_commits (
     session_id TEXT NOT NULL,
     sha TEXT NOT NULL, short_sha TEXT,
     author TEXT, email TEXT, committed_at TEXT,
-    message TEXT, diff_summary TEXT, diff_patch TEXT
+  message TEXT, diff_summary TEXT, diff_patch TEXT,
+  UNIQUE (session_id, sha)
 );
 CREATE TABLE IF NOT EXISTS nl_branches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,27 +92,31 @@ CREATE TABLE IF NOT EXISTS nl_branches (
     last_sha TEXT, last_author TEXT, last_commit_at TEXT,
     commits_in_period INTEGER DEFAULT 0,
     is_stale INTEGER DEFAULT 0, age_days INTEGER DEFAULT 0,
-    was_merged INTEGER DEFAULT 0
+  was_merged INTEGER DEFAULT 0,
+  UNIQUE (session_id, name)
 );
 CREATE TABLE IF NOT EXISTS nl_articles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL, article_id TEXT NOT NULL,
     commit_shas TEXT, title TEXT, body_markdown TEXT,
     authors TEXT, deep_dive INTEGER DEFAULT 0,
-    deep_dive_q TEXT, selected INTEGER DEFAULT 0
+  deep_dive_q TEXT, selected INTEGER DEFAULT 0,
+  UNIQUE (session_id, article_id)
 );
 CREATE TABLE IF NOT EXISTS nl_research (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL, research_id TEXT NOT NULL,
     question TEXT, context TEXT, max_words INTEGER DEFAULT 150,
     status TEXT DEFAULT 'pending',
-    summary_md TEXT, learn_more TEXT, sources TEXT
+  summary_md TEXT, learn_more TEXT, sources TEXT,
+  UNIQUE (session_id, research_id)
 );
 CREATE TABLE IF NOT EXISTS nl_output (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL, newsletter_md TEXT,
     output_path TEXT DEFAULT 'newsletter_output.md',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (session_id)
 );
 CREATE TABLE IF NOT EXISTS nl_status (
     session_id TEXT NOT NULL, stage TEXT NOT NULL,
@@ -121,13 +126,33 @@ CREATE TABLE IF NOT EXISTS nl_status (
 );
 
 INSERT INTO nl_sessions (session_id, repo, branch, period_days, stale_after_days)
-VALUES ('<session_id>', '<repo>', '<branch>', <days>, <stale_days>);
+VALUES ('<session_id>', '<repo>', '<branch>', <days>, <stale_days>)
+ON CONFLICT(session_id) DO UPDATE SET
+    repo = excluded.repo,
+    branch = excluded.branch,
+    period_days = excluded.period_days,
+    stale_after_days = excluded.stale_after_days;
 
 INSERT INTO nl_status (session_id, stage, status) VALUES
   ('<session_id>', 'commit_analysis', 'pending'),
   ('<session_id>', 'web_research',    'pending'),
-  ('<session_id>', 'writing',         'pending');
+  ('<session_id>', 'writing',         'pending')
+ON CONFLICT(session_id, stage) DO UPDATE SET
+    status = excluded.status,
+    updated_at = CURRENT_TIMESTAMP;
 ```
+
+Idempotency contract:
+
+- Treat `session_id` as rerunnable. Reusing the same `session_id` must update
+  logical rows in place instead of creating duplicates.
+- Specialist agents must use conflict-safe writes keyed by the logical
+  identifiers above (`sha`, `name`, `article_id`, `research_id`, and
+  `session_id` for the final output row).
+- Mark a stage `done` only after every required row write for that stage
+  succeeds.
+- If the first required row write fails, stop the stage, set `nl_status.status`
+  to `failed`, and return control to the editor.
 
 ## Orchestration workflow
 
@@ -152,8 +177,15 @@ INSERT INTO nl_status (session_id, stage, status) VALUES
    UPDATE nl_articles SET selected = 1
    WHERE session_id = '<session_id>' AND article_id IN ('<id1>', '<id2>');
 
-   INSERT INTO nl_research (session_id, research_id, question, context)
-   VALUES ('<session_id>', 'r-001', '<question>', '<article_id>');
+     INSERT INTO nl_research (session_id, research_id, question, context)
+     VALUES ('<session_id>', 'r-001', '<question>', '<article_id>')
+     ON CONFLICT(session_id, research_id) DO UPDATE SET
+       question = excluded.question,
+       context = excluded.context,
+       status = 'pending',
+       summary_md = NULL,
+       learn_more = NULL,
+       sources = NULL;
    ```
 
 3. **Web research** — if any `nl_research` rows were inserted, use the

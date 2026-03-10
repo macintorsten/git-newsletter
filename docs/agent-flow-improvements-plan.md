@@ -67,17 +67,17 @@ Files:
 - `.github/skills/newsletter-writing/SKILL.md`
 
 Tasks:
-- [ ] Add uniqueness constraints guidance for logical IDs:
+- [x] Add uniqueness constraints guidance for logical IDs:
   - `nl_commits(session_id, sha)`
   - `nl_articles(session_id, article_id)`
   - `nl_research(session_id, research_id)`
-- [ ] Update SQL examples to use idempotent write patterns.
-- [ ] Add explicit row-level upsert/update behavior per specialist.
-- [ ] Clarify that stage completion happens only after all row writes succeed.
+- [x] Update SQL examples to use idempotent write patterns.
+- [x] Add explicit row-level upsert/update behavior per specialist.
+- [x] Clarify that stage completion happens only after all row writes succeed.
 
 Acceptance criteria:
-- [ ] Skill instructions support safe rerun with same `session_id`.
-- [ ] No specialist uses non-idempotent bulk completion language.
+- [x] Skill instructions support safe rerun with same `session_id`.
+- [x] No specialist uses non-idempotent bulk completion language.
 
 ---
 
@@ -251,6 +251,7 @@ Rationale:
 
 - [~] Plan document created
 - [~] Chunk 1 implemented (not merged)
+- [~] Chunk 2 implemented (not merged)
 - [~] Chunk 7 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged

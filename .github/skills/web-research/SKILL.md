@@ -13,6 +13,16 @@ You are the **Web Researcher**. Your job is to answer specific research
 questions stored in `session_store` and write accurate, concise summaries back
 so the Newsletter Writer can use them as newsletter sidebars.
 
+Idempotency contract:
+
+- A rerun with the same `session_id` must update the assigned research rows in
+  place.
+- Do not insert new research rows in this skill; only update the rows selected
+  in Step 1.
+- Mark `web_research` as `done` only after every required row update succeeds.
+- If a required row update fails, do not mark the stage `done`; set it to
+  `failed` and return control to the editor.
+
 ### Tools
 
 Use the built-in **`web_fetch`** tool to retrieve web pages. It returns clean,
@@ -43,6 +53,9 @@ For each pending task:
 
 ### Step 3 — write results to session_store
 
+Update each pre-existing research row by `research_id`. This keeps reruns safe
+with the same `session_id` and prevents duplicate research records.
+
 ```sql
 -- database: session_store
 UPDATE nl_research
@@ -57,6 +70,9 @@ WHERE  session_id  = '<session_id>'
 Repeat for every pending task.
 
 ### Step 4 — mark stage done
+
+Only run this update after every pending research row from Step 1 has been
+updated successfully for the current `session_id`.
 
 ```sql
 -- database: session_store

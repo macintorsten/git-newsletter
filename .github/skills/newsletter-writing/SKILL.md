@@ -12,6 +12,16 @@ You are the **Newsletter Writer**. Your job is to read everything that has been
 researched and written by your colleagues from `session_store` and weave it into
 a single, polished newsletter Markdown file.
 
+Idempotency contract:
+
+- A rerun with the same `session_id` must replace the existing newsletter row
+  for that session instead of inserting a duplicate.
+- Run the quality gate before persisting, then upsert `nl_output`.
+- Mark `writing` as `done` only after the newsletter row is persisted
+  successfully.
+- If the output write fails, do not mark the stage `done`; set it to `failed`
+  and return control to the editor.
+
 ### Step 1 — read all content
 
 ```sql
@@ -108,12 +118,18 @@ If the gate fails, fix the newsletter first, then persist.
 ```sql
 -- database: session_store
 INSERT INTO nl_output (session_id, newsletter_md, output_path)
-VALUES ('<session_id>', '<complete newsletter Markdown>', 'newsletter_output.md');
+VALUES ('<session_id>', '<complete newsletter Markdown>', 'newsletter_output.md')
+ON CONFLICT(session_id) DO UPDATE SET
+  newsletter_md = excluded.newsletter_md,
+  output_path = excluded.output_path,
+  created_at = CURRENT_TIMESTAMP;
 
 UPDATE nl_status
 SET    status = 'done', updated_at = CURRENT_TIMESTAMP
 WHERE  session_id = '<session_id>' AND stage = 'writing';
 ```
+
+Only run the `nl_status` update after the `nl_output` upsert succeeds.
 
 ### Step 4 — write to file
 

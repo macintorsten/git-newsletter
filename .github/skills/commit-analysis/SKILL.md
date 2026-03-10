@@ -11,6 +11,15 @@ description: >
 You are the **Commit Analyst**. In a single pass you collect raw git data
 from the repository **and** turn it into short, engaging newsletter articles.
 
+Idempotency contract:
+
+- A rerun with the same `session_id` must be safe.
+- Persist commits, branches, and articles with conflict-safe writes so logical
+  rows are updated in place instead of duplicated.
+- Mark `commit_analysis` as `done` only after every required write succeeds.
+- If a required write fails, do not mark the stage `done`; set it to `failed`
+  and return control to the editor.
+
 ### Phase 1 — collect git data with git_skills.py
 
 `git_skills.py` lives in this same skill directory,
@@ -54,7 +63,15 @@ INSERT INTO nl_commits
      committed_at, message, diff_summary, diff_patch)
 VALUES
     ('<session_id>', '<sha>', '<short_sha>', '<author_name>', '<author_email>',
-     '<iso8601_timestamp>', '<commit_message>', '<diff_summary>', '<diff_patch>');
+   '<iso8601_timestamp>', '<commit_message>', '<diff_summary>', '<diff_patch>')
+ON CONFLICT(session_id, sha) DO UPDATE SET
+  short_sha = excluded.short_sha,
+  author = excluded.author,
+  email = excluded.email,
+  committed_at = excluded.committed_at,
+  message = excluded.message,
+  diff_summary = excluded.diff_summary,
+  diff_patch = excluded.diff_patch;
 -- Repeat for every commit returned by get_recent_commits()
 ```
 
@@ -67,16 +84,25 @@ INSERT INTO nl_branches
      commits_in_period, is_stale, age_days, was_merged)
 VALUES
     ('<session_id>', '<branch_name>', '<last_sha>', '<last_author>',
-     '<last_commit_iso>', <commits_in_period>, <0_or_1>, <age_days>, <0_or_1>);
+   '<last_commit_iso>', <commits_in_period>, <0_or_1>, <age_days>, <0_or_1>)
+ON CONFLICT(session_id, name) DO UPDATE SET
+  last_sha = excluded.last_sha,
+  last_author = excluded.last_author,
+  last_commit_at = excluded.last_commit_at,
+  commits_in_period = excluded.commits_in_period,
+  is_stale = excluded.is_stale,
+  age_days = excluded.age_days,
+  was_merged = excluded.was_merged;
 -- Repeat for every branch from get_branch_activity(), get_stale_branches(),
 -- and get_merged_branches()
 ```
 
 #### Error handling
 
-If a branch is not found or a git operation fails, INSERT a row with
-`is_stale = 0` and `commits_in_period = 0`, and log a note in `diff_patch`.
-Do not abort the run for a single branch failure.
+If a branch is not found or a git operation fails, write a fallback branch row
+with `is_stale = 0` and `commits_in_period = 0`, and leave unavailable branch
+fields empty. Keep the collection pass moving when the git helper fails for a
+single branch, but treat database write failures as terminal for the stage.
 
 ---
 
@@ -121,11 +147,21 @@ INSERT INTO nl_articles
 VALUES
     ('<session_id>', '<article_id>', '<sha1,sha2,...>', '<Friendly Title>',
      '<full article in Markdown>', '<Author One, Author Two>',
-     <0_or_1>, '<deep dive question or NULL>');
+   <0_or_1>, '<deep dive question or NULL>')
+ON CONFLICT(session_id, article_id) DO UPDATE SET
+  commit_shas = excluded.commit_shas,
+  title = excluded.title,
+  body_markdown = excluded.body_markdown,
+  authors = excluded.authors,
+  deep_dive = excluded.deep_dive,
+  deep_dive_q = excluded.deep_dive_q;
 -- Repeat for every article group.
 ```
 
 #### Step 9 — mark stage done
+
+Only run this update after every required commit, branch, and article write has
+succeeded for the current `session_id`.
 
 ```sql
 -- database: session_store
