@@ -44,18 +44,19 @@ The agents (especially commit analysis) execute Python helpers under
 Prerequisites:
 
 - Copilot CLI installed and authenticated
+- Use `--experimental` when invoking Copilot CLI to enable session database support
 - Git access to target repository URL/path
 
 Direct prompt:
 
 ```bash
-copilot -p "Create a concise weekly engineering newsletter from https://github.com/microsoft/vscode.git. Use branch main, cover the last 7 days, title it Dev Weekly, and write the final markdown to vscode-weekly-newsletter.md." --agent "newsletter-editor" --yolo
+copilot --experimental -p "Create a concise weekly engineering newsletter from https://github.com/microsoft/vscode.git. Use branch main, cover the last 7 days, title it Dev Weekly, and write the final markdown to vscode-weekly-newsletter.md." --agent "newsletter-editor" --yolo
 ```
 
 Prompt profile file with additional instructions:
 
 ```bash
-newsletter_markdown=$(copilot -p "Use profile prompt file .github/prompts/profiles/examples/example-flask-monthly.prompt.md.
+newsletter_markdown=$(copilot --experimental -p "Use profile prompt file .github/prompts/profiles/examples/example-flask-monthly.prompt.md.
 Generate a maintainers-focused monthly digest. Respond with only the final newsletter markdown content." --agent "newsletter-editor" --yolo)
 
 printf '%s\n' "$newsletter_markdown" > flask-monthly-newsletter.md
