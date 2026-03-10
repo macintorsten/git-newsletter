@@ -173,7 +173,35 @@ Acceptance criteria:
 
 ---
 
-## Chunk 7: Docs + Runbook Update
+## Chunk 7: Output Format Contract (No Frontmatter)
+
+Commit intent:
+- Ensure generated newsletter Markdown is content-only and never starts with YAML frontmatter.
+
+Files:
+- `.github/skills/newsletter-writing/SKILL.md`
+- `.github/agents/newsletter-writer.agent.md`
+- `README.md` (only if output-format expectations are documented)
+
+Research findings (current behavior):
+- The writer skill currently provides a canonical output template that starts with YAML frontmatter (`---` metadata block).
+- A generated sample newsletter in `samples/email/` includes that frontmatter at the top, confirming this behavior in practice.
+- The desired contract is markdown output without frontmatter, so current writer instructions conflict with product expectations.
+
+Tasks:
+- [ ] Remove frontmatter from the canonical newsletter template in writer instructions.
+- [ ] Replace metadata block with plain markdown header/subheader content (title/period/repo/branch) in-body.
+- [ ] Add explicit negative requirement: "Do not include YAML/frontmatter delimiters (`---`) at document start."
+- [ ] Add a simple validation step in writer guidance that checks first non-empty line is not `---`.
+
+Acceptance criteria:
+- [ ] Generated `newsletter_md` never begins with `---`.
+- [ ] Writer agent and writer skill are consistent on no-frontmatter output format.
+- [ ] Existing section structure still renders correctly in markdown-to-HTML conversion.
+
+---
+
+## Chunk 8: Docs + Runbook Update
 
 Commit intent:
 - Keep operations discoverable for future maintainers.
@@ -202,6 +230,7 @@ Acceptance criteria:
 5. Chunk 5
 6. Chunk 6
 7. Chunk 7
+8. Chunk 8
 
 Rationale:
 - Establish contract/state first.
@@ -228,3 +257,4 @@ Rationale:
 - [ ] Chunk 5 merged
 - [ ] Chunk 6 merged
 - [ ] Chunk 7 merged
+- [ ] Chunk 8 merged
