@@ -195,9 +195,9 @@ Tasks:
 - [x] Add a simple validation step in writer guidance that checks first non-empty line is not `---`.
 
 Acceptance criteria:
-- [ ] Generated `newsletter_md` never begins with `---`.
-- [ ] Writer agent and writer skill are consistent on no-frontmatter output format.
-- [ ] Existing section structure still renders correctly in markdown-to-HTML conversion.
+- [x] Generated `newsletter_md` never begins with `---`.
+- [x] Writer agent and writer skill are consistent on no-frontmatter output format.
+- [x] Existing section structure still renders correctly in markdown-to-HTML conversion.
 
 ---
 
@@ -251,6 +251,7 @@ Rationale:
 
 - [~] Plan document created
 - [~] Chunk 1 implemented (not merged)
+- [~] Chunk 7 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged
 - [ ] Chunk 4 merged

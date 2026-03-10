@@ -21,10 +21,9 @@ from everything stored in `session_store`.
 Follow the detailed instructions in
 `.github/skills/newsletter-writing/SKILL.md`.
 
-Output contract:
+Quality check:
 
-- Generate content-only Markdown.
-- Never include YAML/frontmatter delimiters (`---`) at document start.
+- Apply the quality gate defined in `.github/skills/newsletter-writing/SKILL.md` before persisting output.
 
 ## Inputs (from session_store)
 
