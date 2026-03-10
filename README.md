@@ -1,9 +1,19 @@
 # Markdown Mailer + Git Newsletter Editor
 
+[![Deploy Examples to GitHub Pages](https://github.com/macintorsten/git-newsletter/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/macintorsten/git-newsletter/actions/workflows/deploy-pages.yml)
+
 A containerized utility to convert Markdown and CSS into inline-styled,
 email-ready HTML, send it via SMTP, and — new! — **automatically generate a
 developer newsletter** from recent git activity using an AI agent pipeline. It
 uses `uv` for lightning-fast dependency management.
+
+## 🌐 Live Theme Gallery
+
+Browse all email themes in both standard and wide formats without cloning the repository:
+
+👉 **[View Live Demo on GitHub Pages](https://macintorsten.github.io/git-newsletter/)**
+
+The gallery is automatically rebuilt and deployed on every push to `main`.
 
 ---
 
