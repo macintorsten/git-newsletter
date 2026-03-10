@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 ROOT = Path(__file__).resolve().parent
-PYTHON_EXE = "/usr/local/bin/python"
+PYTHON_EXE = sys.executable
 MARKDOWN_FILE = ROOT / "examples/example_input.md"
 STYLES_DIR = ROOT / "examples/styles"
 OUTPUT_DIR = ROOT / "examples/generated_html"
