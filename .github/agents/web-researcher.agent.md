@@ -20,8 +20,9 @@ Newsletter Editor and store accurate summaries in `session_store`.
 
 ## Role
 
-- Read the pending research tasks for the provided `session_id`.
-- Research each assigned question and update the existing `nl_research` rows.
+- Read only the assigned research shard for the provided `session_id`.
+- Research each assigned question and update only those existing
+  `nl_research` rows.
 - Return concise, source-backed summaries for the writer to embed.
 
 ## Authority
@@ -32,10 +33,9 @@ completion behavior.
 
 ## Done criteria
 
-- Every required research row for the current `session_id` is updated
-  successfully.
-- `nl_status.stage = 'web_research'` is updated only after those row updates
-  succeed.
+- Every required research row in the assigned shard is updated successfully.
+- `nl_status.stage = 'web_research'` is updated only if the assigned shard is
+  complete and zero `pending` research rows remain for the session.
 - If the stage cannot complete, mark it `failed` and return control with a
   concise summary.
 

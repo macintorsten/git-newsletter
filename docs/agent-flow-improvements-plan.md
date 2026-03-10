@@ -118,14 +118,14 @@ Files:
 - `.github/agents/FLOW.md`
 
 Tasks:
-- [ ] Add orchestrator guidance to split pending research into shards/batches.
-- [ ] Pass explicit `research_id` set or shard token in handoff prompt.
-- [ ] Require researcher to update only assigned rows.
-- [ ] Mark stage done only after zero pending rows remain.
+- [x] Add orchestrator guidance to split pending research into shards/batches.
+- [x] Pass explicit `research_id` set or shard token in handoff prompt.
+- [x] Require researcher to update only assigned rows.
+- [x] Mark stage done only after zero pending rows remain.
 
 Acceptance criteria:
-- [ ] Parallel workers cannot overwrite each other's rows.
-- [ ] Flow doc describes fan-out and fan-in clearly.
+- [x] Parallel workers cannot overwrite each other's rows.
+- [x] Flow doc describes fan-out and fan-in clearly.
 
 ---
 
@@ -253,6 +253,7 @@ Rationale:
 - [~] Chunk 1 implemented (not merged)
 - [~] Chunk 2 implemented (not merged)
 - [~] Chunk 3 implemented (not merged)
+- [~] Chunk 4 implemented (not merged)
 - [~] Chunk 7 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged

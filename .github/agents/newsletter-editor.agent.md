@@ -18,8 +18,10 @@ handoffs:
     agent: web-researcher
     send: true
     prompt: >
-      Research all pending topics in nl_research for
-      session_id = '<session_id>'. Follow .github/skills/web-research/SKILL.md.
+      Research the assigned deep-dive topics in nl_research for
+      session_id = '<session_id>'. Only process research_id values in
+      (<research_id_csv>) for shard '<shard_token>'. Follow
+      .github/skills/web-research/SKILL.md.
   - label: "✍️ Write the newsletter"
     agent: newsletter-writer
     send: true
@@ -188,8 +190,24 @@ Idempotency contract:
        sources = NULL;
    ```
 
-3. **Web research** — if any `nl_research` rows were inserted, use the
-   **🌐 Research deep-dive topics** handoff to delegate to `web-researcher`.
+3. **Web research** — if any `nl_research` rows were inserted, split the
+  pending rows into explicit shards before delegating to `web-researcher`.
+  Prefer one row per shard when there are 2-3 deep dives, or small batches of
+  at most 2 rows when context is tight.
+
+  Read the pending queue first:
+
+  ```sql
+  -- database: session_store
+  SELECT research_id
+  FROM nl_research
+  WHERE session_id = '<session_id>' AND status = 'pending'
+  ORDER BY id;
+  ```
+
+  Then hand off one worker per shard using an explicit `research_id` set and
+  shard token such as `research-batch-1`.
+
   Poll `stage = 'web_research'`. If no deep dives were requested, set
   `web_research = 'skipped'` and proceed directly to writing.
 
@@ -204,8 +222,13 @@ Idempotency contract:
 
 - Always delegate to specialist agents instead of doing specialist work in the
   editor itself.
-- Queue independent deep-dive questions first, then ask `web-researcher` to
-  process pending rows in parallel where tool/runtime support allows it.
+- Queue independent deep-dive questions first, then split pending rows into
+  deterministic shards with explicit `research_id` ownership per worker.
+- Pass the assigned `research_id` set and a shard token in every research
+  handoff so parallel workers cannot overwrite each other's rows.
+- Treat `web_research` as fan-out/fan-in: shard workers may finish
+  independently, but the stage is `done` only when zero `pending` rows remain
+  for the session.
 - Keep orchestration deterministic: even with parallel specialist work,
   stage transitions in `nl_status` remain the source of truth.
 

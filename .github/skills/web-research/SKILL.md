@@ -21,6 +21,14 @@ Authority and scope:
   criteria.
 - Keep detailed source rules, SQL updates, and persistence behavior here.
 
+Execution input contract:
+
+- The editor must pass an explicit `research_id` set for the assigned shard,
+  plus a shard token for traceability.
+- Process only the assigned `research_id` values for the current `session_id`.
+- If the handoff does not include an explicit `research_id` set, stop and
+  return a concise error instead of claiming the whole queue.
+
 Idempotency contract:
 
 - A rerun with the same `session_id` must update the assigned research rows in
@@ -36,18 +44,23 @@ Idempotency contract:
 Use the built-in **`web_fetch`** tool to retrieve web pages. It returns clean,
 already-processed content — no need to parse HTML yourself.
 
-### Step 1 — read pending research tasks
+### Step 1 — read the assigned research shard
 
 ```sql
 -- database: session_store
 SELECT research_id, question, context, max_words
 FROM   nl_research
-WHERE  session_id = '<session_id>' AND status = 'pending';
+WHERE  session_id = '<session_id>'
+  AND  status = 'pending'
+  AND  research_id IN ('<id1>', '<id2>');
 ```
+
+The `IN (...)` list must match the explicit `research_id` values passed by the
+editor for this shard.
 
 ### Step 2 — research each question
 
-For each pending task:
+For each assigned task:
 
 1. Use `web_fetch` to search for and read at least 2–3 reliable sources.
    Prefer official documentation, release notes, RFCs, or reputable technical
@@ -75,12 +88,25 @@ WHERE  session_id  = '<session_id>'
   AND  research_id = '<research_id>';
 ```
 
-Repeat for every pending task.
+Repeat for every assigned task.
 
 ### Step 4 — mark stage done
 
-Only run this update after every pending research row from Step 1 has been
-updated successfully for the current `session_id`.
+Only run the stage-completion update after every assigned research row from
+Step 1 has been updated successfully for the current `session_id` and there are
+no remaining `pending` rows anywhere in the session.
+
+Check for fan-in completion first:
+
+```sql
+-- database: session_store
+SELECT COUNT(*) AS pending_count
+FROM   nl_research
+WHERE  session_id = '<session_id>' AND status = 'pending';
+```
+
+If `pending_count > 0`, do not mark the stage `done` yet. Return control to the
+editor after finishing the assigned shard.
 
 ```sql
 -- database: session_store
@@ -91,6 +117,7 @@ WHERE  session_id = '<session_id>' AND stage = 'web_research';
 
 ### Handoff
 
-Notify the **Newsletter Editor** that `stage = 'web_research'` is `'done'`.
-The Newsletter Writer will join research results with articles when assembling
-the final newsletter.
+Notify the **Newsletter Editor** that the assigned shard is complete. If this
+worker also observed zero pending rows and marked `stage = 'web_research'` as
+`'done'`, say so explicitly. The Newsletter Writer will join research results
+with articles when assembling the final newsletter.

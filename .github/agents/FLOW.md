@@ -36,17 +36,21 @@ User invokes @newsletter-editor
                ├─── deep dives queued? ──────────────────────────────────────┐
                │                                                  yes         │
                │                                                              │
-               │  STEP 2 (optional) ── handoff ──────────────────────────────▼
-               │  "🌐 Research deep-dive topics"       ┌───────────────────────────────┐
-               │                                       │       web-researcher          │
-               │                                       │  fetches web pages,           │
-               │                                       │  writes summaries to          │
-               │                                       │  nl_research rows             │
-               │                                       │  Marks web_research = done    │
-               │                                       └──────────────┬────────────────┘
-               │                                                      │
-               │  ◄─────────────────── handoff back ──────────────────┘
-               │  "↩️ Return to editor — web research done"
+               │  STEP 2 (optional) ── fan out shard handoffs ────────┬──────────────┐
+               │  "🌐 Research deep-dive topics"                      │              │
+               │  shard A: r-001                                       ▼              ▼
+               │                                       ┌────────────────────┐ ┌────────────────────┐
+               │                                       │   web-researcher   │ │   web-researcher   │
+               │                                       │  shard A only      │ │  shard B only      │
+               │                                       │  updates assigned  │ │  updates assigned  │
+               │                                       │  nl_research rows  │ │  nl_research rows  │
+               │                                       └──────────┬─────────┘ └──────────┬─────────┘
+               │                                                  │                      │
+               │  ◄──────────────────── handoff back ─────────────┴──────────────┬───────┘
+               │  "↩️ Return to editor — web research done"                      │
+               │                                                                  │
+               │  FAN IN: editor/winning final worker observes zero pending rows ◄┘
+               │  and only then marks web_research = done
                │
                │  STEP 3 ── handoff ──────────────────────────────────────┐
                │  "✍️ Write the newsletter"                                │
@@ -74,8 +78,9 @@ User invokes @newsletter-editor
 ```
 
 Parallelism note: when multiple deep-dive rows are queued in `nl_research`,
-the `web-researcher` may process those rows concurrently before marking
-`web_research` as done.
+the editor splits them into explicit shards and passes each worker a bounded
+`research_id` set. Workers update only their assigned rows. `web_research` is
+marked `done` only after fan-in confirms zero pending rows remain.
 
 ## State machine (`nl_status`)
 
@@ -112,8 +117,8 @@ Terminal behavior:
 |---------------------|---------------------|--------------------------------------|
 | newsletter-editor   | commit-analyst      | Pipeline start                       |
 | commit-analyst      | newsletter-editor   | `commit_analysis` = done             |
-| newsletter-editor   | web-researcher      | Deep-dive tasks queued in nl_research |
-| web-researcher      | newsletter-editor   | `web_research` = done                |
+| newsletter-editor   | web-researcher      | Deep-dive shard queued with explicit `research_id` ownership |
+| web-researcher      | newsletter-editor   | Assigned shard completed; stage may be `done` only after fan-in |
 | newsletter-editor   | newsletter-writer   | Articles selected, research done     |
 | newsletter-writer   | newsletter-editor   | `writing` = done                     |
 
