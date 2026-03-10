@@ -189,10 +189,10 @@ Research findings (current behavior):
 - The desired contract is markdown output without frontmatter, so current writer instructions conflict with product expectations.
 
 Tasks:
-- [ ] Remove frontmatter from the canonical newsletter template in writer instructions.
-- [ ] Replace metadata block with plain markdown header/subheader content (title/period/repo/branch) in-body.
-- [ ] Add explicit negative requirement: "Do not include YAML/frontmatter delimiters (`---`) at document start."
-- [ ] Add a simple validation step in writer guidance that checks first non-empty line is not `---`.
+- [x] Remove frontmatter from the canonical newsletter template in writer instructions.
+- [x] Replace metadata block with plain markdown header/subheader content (title/period/repo/branch) in-body.
+- [x] Add explicit negative requirement: "Do not include YAML/frontmatter delimiters (`---`) at document start."
+- [x] Add a simple validation step in writer guidance that checks first non-empty line is not `---`.
 
 Acceptance criteria:
 - [ ] Generated `newsletter_md` never begins with `---`.

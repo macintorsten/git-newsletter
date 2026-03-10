@@ -21,6 +21,11 @@ from everything stored in `session_store`.
 Follow the detailed instructions in
 `.github/skills/newsletter-writing/SKILL.md`.
 
+Output contract:
+
+- Generate content-only Markdown.
+- Never include YAML/frontmatter delimiters (`---`) at document start.
+
 ## Inputs (from session_store)
 
 ```sql
