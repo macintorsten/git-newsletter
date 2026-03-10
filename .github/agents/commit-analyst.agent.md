@@ -41,6 +41,18 @@ idempotent writes, and failure handling.
 - If the stage cannot complete, mark it `failed` and return control with a
   concise summary.
 
+## Reliability contract
+
+- Retry transient git, network, auth, or database-write failures up to 3
+  times before failing the stage.
+- Continue past row-local collection issues where the workflow can degrade
+  safely, especially single-branch or single-commit enrichment problems;
+  reserve stage failure for repeated tool failures or required write failures.
+- When the stage fails, write a concise `error_note` to `nl_status` that names
+  the failing operation and whether rerunning the same `session_id` is safe.
+- On recovery, reuse the same `session_id` and update the same logical rows
+  rather than creating replacement records.
+
 ## Handoff contract
 
 Use the **↩️ Return to editor — commit analysis done** handoff after the stage

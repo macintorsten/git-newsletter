@@ -39,6 +39,18 @@ completion behavior.
 - If the stage cannot complete, mark it `failed` and return control with a
   concise summary.
 
+## Reliability contract
+
+- Retry transient `web_fetch`, auth, and database-write failures up to 3 times
+  per assigned row before failing the stage.
+- Treat row-local source gaps as non-fatal when the row can still be completed
+  with an explicit fallback summary; continue with the remaining assigned rows.
+- When the stage fails, write a concise `error_note` to `nl_status` that names
+  the failing `research_id` or shard token and whether rerunning the same
+  `session_id` is safe.
+- On recovery, reuse the same `session_id`, keep shard ownership explicit, and
+  only rerun rows that are still `pending` or otherwise incomplete.
+
 ## Handoff contract
 
 Use the **↩️ Return to editor — web research done** handoff after the stage

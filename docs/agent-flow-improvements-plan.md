@@ -140,14 +140,14 @@ Files:
 - `.github/agents/commit-analyst.agent.md`
 
 Tasks:
-- [ ] Add retry policy for transient tool/database auth failures.
-- [ ] Add failure recording guidance (stage + error note).
-- [ ] Require non-fatal per-row error continuation where appropriate.
-- [ ] Document recovery path for restarting from existing `session_id`.
+- [x] Add retry policy for transient tool/database auth failures.
+- [x] Add failure recording guidance (stage + error note).
+- [x] Require non-fatal per-row error continuation where appropriate.
+- [x] Document recovery path for restarting from existing `session_id`.
 
 Acceptance criteria:
-- [ ] A transient first-failure can recover without losing the run.
-- [ ] Failed runs are diagnosable from status tables and notes.
+- [x] A transient first-failure can recover without losing the run.
+- [x] Failed runs are diagnosable from status tables and notes.
 
 ---
 
@@ -254,6 +254,7 @@ Rationale:
 - [~] Chunk 2 implemented (not merged)
 - [~] Chunk 3 implemented (not merged)
 - [~] Chunk 4 implemented (not merged)
+- [~] Chunk 5 implemented (not merged)
 - [~] Chunk 7 implemented (not merged)
 - [ ] Chunk 2 merged
 - [ ] Chunk 3 merged

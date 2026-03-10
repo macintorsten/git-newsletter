@@ -40,6 +40,7 @@ Copilot's native `session_store` database using SQL.
 Interpret user input directly with this contract:
 
 - `repo` (required): local path or remote URL
+- `session_id` (optional): reuse an existing run for recovery or targeted rerun
 - `branch` (optional): default `main`
 - `period_days` (optional): default `7`
 - `title` (optional): newsletter title override
@@ -51,6 +52,7 @@ Input resolution rules:
   initialising the session.
 - If `repo` is missing and you cannot ask, stop and return a concise error
   requesting `repo`.
+- If `session_id` is provided, resume that run instead of creating a new one.
 - If optional fields are missing, use defaults.
 - If optional fields are ambiguous, make a best guess and state the assumed
   values in your confirmation.
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS nl_output (
 CREATE TABLE IF NOT EXISTS nl_status (
     session_id TEXT NOT NULL, stage TEXT NOT NULL,
     status TEXT NOT NULL,
+  error_note TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (session_id, stage)
 );
@@ -141,6 +144,7 @@ INSERT INTO nl_status (session_id, stage, status) VALUES
   ('<session_id>', 'writing',         'pending')
 ON CONFLICT(session_id, stage) DO UPDATE SET
     status = excluded.status,
+  error_note = NULL,
     updated_at = CURRENT_TIMESTAMP;
 ```
 
@@ -157,6 +161,23 @@ Idempotency contract:
   to `failed`, and return control to the editor.
 
 ## Orchestration workflow
+
+Recovery workflow:
+
+- On a fresh run, create a new `session_id` and initialize the schema.
+- On a recovery run, reuse the provided `session_id`, inspect `nl_status`, and
+  rerun only stages that are `pending` or `failed`.
+- Before rerunning a failed stage, reset it to `pending` and clear the prior
+  note:
+
+  ```sql
+  -- database: session_store
+  UPDATE nl_status
+  SET status = 'pending', error_note = NULL, updated_at = CURRENT_TIMESTAMP
+  WHERE session_id = '<session_id>'
+    AND stage IN ('commit_analysis', 'web_research', 'writing')
+    AND status = 'failed';
+  ```
 
 1. **Commit analysis** — use the **🔍 Analyse commits & write articles**
    handoff to delegate to `commit-analyst`.
@@ -255,8 +276,22 @@ Failure and polling behavior:
 - If `commit_analysis` or `writing` becomes `failed`, stop orchestration and
   return a concise failure summary.
 - `web_research = 'skipped'` is valid when no deep-dive tasks were queued.
-- During polling, retry transient SQL/tool failures briefly (2-3 attempts)
-  before marking a stage `failed`.
+- Retry transient polling, database lock, and auth failures 2-3 times before
+  marking a stage `failed`.
+- When a stage fails, persist a concise `error_note` naming the failing
+  operation, affected shard or row when applicable, and whether rerunning the
+  same `session_id` is safe.
+
+Failure recording SQL:
+
+```sql
+-- database: session_store
+UPDATE nl_status
+SET status = 'failed',
+    error_note = '<short failure summary>',
+    updated_at = CURRENT_TIMESTAMP
+WHERE session_id = '<session_id>' AND stage = '<stage>';
+```
 
 ## Editorial guidelines
 
