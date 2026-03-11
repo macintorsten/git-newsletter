@@ -15,6 +15,23 @@ Flow reference: see [`.github/agents/FLOW.md`](.github/agents/FLOW.md).
 
 ## Agent workflow (simplified)
 
+```mermaid
+flowchart LR
+    Editor(["newsletter-editor<br/>orchestrator"])
+    Analyst["commit-analyst"]
+    Researcher["web-researcher<br/>optional"]
+    Writer["newsletter-writer"]
+    Output([newsletter_output.md])
+
+    Editor -->|"STEP 1"| Analyst
+    Analyst -->|done| Editor
+    Editor -->|"STEP 2 optional"| Researcher
+    Researcher -->|done| Editor
+    Editor -->|"STEP 3"| Writer
+    Writer --> Output
+    Writer -->|done| Editor
+```
+
 - [`newsletter-editor`](.github/agents/newsletter-editor.agent.md) is the orchestrator and entrypoint.
 - [`commit-analyst`](.github/agents/commit-analyst.agent.md) gathers git data and writes article drafts.
 - `newsletter-editor` selects what to include and optionally queues research.

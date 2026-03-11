@@ -12,7 +12,8 @@
                 "GitHub.copilot-chat",
                 "ms-python.python",
                 "charliermarsh.ruff",
-                "ritwickdey.LiveServer"
+                "ritwickdey.LiveServer",
+                "bierner.markdown-mermaid"
             ]
         }
     }
