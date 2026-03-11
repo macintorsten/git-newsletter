@@ -34,11 +34,12 @@ flowchart TD
     User --> Init
     Init -->|"STEP 1 — handoff\n🔍 Analyse commits & write articles"| CommitAnalyst
     CommitAnalyst -->|"↩️ handoff back — commit analysis done"| Editorial
-    Editorial -->|"STEP 2 optional — fan-out handoffs\n🌐 Research deep-dive topics"| ResearchA
-    Editorial -->|"STEP 2 optional — fan-out handoffs\n🌐 Research deep-dive topics"| ResearchB
+    Editorial -->|"STEP 2 — decide on deep dives"| DeepDives{"Deep dives queued?"}
+    DeepDives -->|"yes — optional fan-out handoffs\n🌐 Research deep-dive topics"| ResearchA
+    DeepDives -->|"yes — optional fan-out handoffs\n🌐 Research deep-dive topics"| ResearchB
     ResearchA -->|"↩️ handoff back"| FanIn
     ResearchB -->|"↩️ handoff back"| FanIn
-    Editorial -->|"no deep dives — skip to STEP 3"| Writer
+    DeepDives -->|"no — skip to STEP 3"| Writer
     FanIn -->|"STEP 3 — handoff\n✍️ Write the newsletter"| Writer
     Writer -->|"↩️ handoff back — newsletter written"| Finalise
     Finalise --> Output
