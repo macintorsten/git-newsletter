@@ -11,15 +11,15 @@ It analyzes a repository and produces newsletter markdown as output.
    articles, optionally research deep dives, and assemble final markdown.
 4. The main artifact is a markdown newsletter file.
 
-Flow reference: see `.github/agents/FLOW.md`.
+Flow reference: see [`.github/agents/FLOW.md`](.github/agents/FLOW.md).
 
 ## Agent workflow (simplified)
 
-- `newsletter-editor` is the orchestrator and entrypoint.
-- `commit-analyst` gathers git data and writes article drafts.
+- [`newsletter-editor`](.github/agents/newsletter-editor.agent.md) is the orchestrator and entrypoint.
+- [`commit-analyst`](.github/agents/commit-analyst.agent.md) gathers git data and writes article drafts.
 - `newsletter-editor` selects what to include and optionally queues research.
-- `web-researcher` fills research sidebars when queued.
-- `newsletter-writer` assembles final newsletter markdown.
+- [`web-researcher`](.github/agents/web-researcher.agent.md) fills research sidebars when queued.
+- [`newsletter-writer`](.github/agents/newsletter-writer.agent.md) assembles final newsletter markdown.
 - `newsletter-editor` returns the final output path/content.
 
 ## Python setup (required once)
@@ -106,11 +106,3 @@ uv run python send_email.py \
   --to recipient@example.com \
   --subject "Automated Markdown Newsletter"
 ```
-
-## Key files
-
-- `.github/agents/newsletter-editor.agent.md`
-- `.github/agents/commit-analyst.agent.md`
-- `.github/agents/web-researcher.agent.md`
-- `.github/agents/newsletter-writer.agent.md`
-- `.github/agents/FLOW.md`
