@@ -5,76 +5,43 @@ Each agent is defined as a `.agent.md` file in this directory.
 
 ## Pipeline Overview
 
-```
-User invokes @newsletter-editor
-         │
-         ▼
-┌─────────────────────────────┐
-│      newsletter-editor      │  initialises session_store schema,
-│      (orchestrator)         │  session_id, and nl_status rows
-└──────────────┬──────────────┘
-               │
-               │  STEP 1 ── handoff ──────────────────────────────────────┐
-               │  "🔍 Analyse commits & write articles"                    │
-               │                                                           ▼
-               │                               ┌──────────────────────────────────┐
-               │                               │        commit-analyst            │
-               │                               │  Phase 1: run git_skills.py,     │
-               │                               │    INSERT nl_commits +           │
-               │                               │    nl_branches                   │
-               │                               │  Phase 2: group commits,         │
-               │                               │    write & INSERT nl_articles    │
-               │                               │  Marks commit_analysis = done    │
-               │                               └──────────────┬───────────────────┘
-               │                                              │
-               │  ◄────────────── handoff back ───────────────┘
-               │  "↩️ Return to editor — commit analysis done"
-               │
-               │  EDITORIAL REVIEW (editor selects articles,
-               │  optionally queues 0–3 deep-dive research tasks)
-               │
-               ├─── deep dives queued? ──────────────────────────────────────┐
-               │                                                  yes         │
-               │                                                              │
-               │  STEP 2 (optional) ── fan out shard handoffs ────────┬──────────────┐
-               │  "🌐 Research deep-dive topics"                      │              │
-               │  shard A: r-001                                       ▼              ▼
-               │                                       ┌────────────────────┐ ┌────────────────────┐
-               │                                       │   web-researcher   │ │   web-researcher   │
-               │                                       │  shard A only      │ │  shard B only      │
-               │                                       │  updates assigned  │ │  updates assigned  │
-               │                                       │  nl_research rows  │ │  nl_research rows  │
-               │                                       └──────────┬─────────┘ └──────────┬─────────┘
-               │                                                  │                      │
-               │  ◄──────────────────── handoff back ─────────────┴──────────────┬───────┘
-               │  "↩️ Return to editor — web research done"                      │
-               │                                                                  │
-               │  FAN IN: editor/winning final worker observes zero pending rows ◄┘
-               │  and only then marks web_research = done
-               │
-               │  STEP 3 ── handoff ──────────────────────────────────────┐
-               │  "✍️ Write the newsletter"                                │
-               │                                                           ▼
-               │                               ┌──────────────────────────────────┐
-               │                               │      newsletter-writer           │
-               │                               │  reads nl_articles (selected),   │
-               │                               │  nl_research (done),             │
-               │                               │  nl_branches                     │
-               │                               │  assembles Markdown file         │
-               │                               │  Marks writing = done            │
-               │                               └──────────────┬───────────────────┘
-               │                                              │
-               │  ◄────────────── handoff back ───────────────┘
-               │  "↩️ Return to editor — newsletter written"
-               │
-               ▼
-┌─────────────────────────────┐
-│      newsletter-editor      │  reads nl_output, confirms file
-│      (finalise)             │  path and content to the user
-└─────────────────────────────┘
-               │
-               ▼
-        newsletter_output.md
+```mermaid
+flowchart TD
+    User([User invokes @newsletter-editor])
+
+    subgraph editor [newsletter-editor — orchestrator]
+        Init["initialises session_store schema\nsession_id and nl_status rows"]
+        Editorial["EDITORIAL REVIEW\nselects articles\noptionally queues 0–3\ndeep-dive research tasks"]
+        FanIn["FAN IN\nconfirms zero pending rows\nmarks web_research = done"]
+        Finalise["reads nl_output\nconfirms file path and content\nto the user"]
+    end
+
+    subgraph analyst [commit-analyst]
+        CommitAnalyst["Phase 1: run git_skills.py\nINSERT nl_commits + nl_branches\nPhase 2: group commits\nwrite + INSERT nl_articles\nMarks commit_analysis = done"]
+    end
+
+    subgraph research [web-researcher — optional, fan-out]
+        ResearchA["shard A\nupdates assigned\nnl_research rows"]
+        ResearchB["shard B\nupdates assigned\nnl_research rows"]
+    end
+
+    subgraph writer [newsletter-writer]
+        Writer["reads nl_articles (selected)\nnl_research (done)\nnl_branches\nassembles Markdown file\nMarks writing = done"]
+    end
+
+    Output([newsletter_output.md])
+
+    User --> Init
+    Init -->|"STEP 1 — handoff\n🔍 Analyse commits & write articles"| CommitAnalyst
+    CommitAnalyst -->|"↩️ handoff back — commit analysis done"| Editorial
+    Editorial -->|"STEP 2 optional — fan-out handoffs\n🌐 Research deep-dive topics"| ResearchA
+    Editorial -->|"STEP 2 optional — fan-out handoffs\n🌐 Research deep-dive topics"| ResearchB
+    ResearchA -->|"↩️ handoff back"| FanIn
+    ResearchB -->|"↩️ handoff back"| FanIn
+    Editorial -->|"no deep dives — skip to STEP 3"| Writer
+    FanIn -->|"STEP 3 — handoff\n✍️ Write the newsletter"| Writer
+    Writer -->|"↩️ handoff back — newsletter written"| Finalise
+    Finalise --> Output
 ```
 
 Parallelism note: when multiple deep-dive rows are queued in `nl_research`,
