@@ -10,39 +10,39 @@ flowchart TD
     User([User invokes @newsletter-editor])
 
     subgraph editor [newsletter-editor — orchestrator]
-        Init["initialises session_store schema\nsession_id and nl_status rows"]
-        Editorial["EDITORIAL REVIEW\nselects articles\noptionally queues 0–3\ndeep-dive research tasks"]
-        FanIn["FAN IN\nconfirms zero pending rows\nmarks web_research = done"]
-        Finalise["reads nl_output\nconfirms file path and content\nto the user"]
+        Init["initialises session_store schema<br/>session_id and nl_status rows"]
+        Editorial["EDITORIAL REVIEW<br/>selects articles<br/>optionally queues 0-3 deep-dive research tasks"]
+        FanIn["FAN IN<br/>confirms zero pending rows<br/>marks web_research = done"]
+        Finalise["reads nl_output<br/>confirms file path and content to the user"]
     end
 
     subgraph analyst [commit-analyst]
-        CommitAnalyst["Phase 1: run git_skills.py\nINSERT nl_commits + nl_branches\nPhase 2: group commits\nwrite + INSERT nl_articles\nMarks commit_analysis = done"]
+        CommitAnalyst["Phase 1: run git_skills.py<br/>INSERT nl_commits + nl_branches<br/>Phase 2: group commits<br/>write + INSERT nl_articles<br/>Marks commit_analysis = done"]
     end
 
     subgraph research [web-researcher — optional, fan-out]
-        ResearchA["shard A\nupdates assigned\nnl_research rows"]
-        ResearchB["shard B\nupdates assigned\nnl_research rows"]
+        ResearchA["shard A<br/>updates assigned nl_research rows"]
+        ResearchB["shard B<br/>updates assigned nl_research rows"]
     end
 
     subgraph writer [newsletter-writer]
-        Writer["reads nl_articles (selected)\nnl_research (done)\nnl_branches\nassembles Markdown file\nMarks writing = done"]
+        Writer["reads nl_articles selected, nl_research done, nl_branches<br/>assembles Markdown file<br/>writes nl_output<br/>Marks writing = done"]
     end
 
     Output([newsletter_output.md])
 
     User --> Init
-    Init -->|"STEP 1 — handoff\n🔍 Analyse commits & write articles"| CommitAnalyst
-    CommitAnalyst -->|"↩️ handoff back — commit analysis done"| Editorial
+    Init -->|"STEP 1 — handoff: analyse commits"| CommitAnalyst
+    CommitAnalyst -->|"commit analysis done"| Editorial
     Editorial -->|"STEP 2 — decide on deep dives"| DeepDives{"Deep dives queued?"}
-    DeepDives -->|"yes — optional fan-out handoffs\n🌐 Research deep-dive topics"| ResearchA
-    DeepDives -->|"yes — optional fan-out handoffs\n🌐 Research deep-dive topics"| ResearchB
-    ResearchA -->|"↩️ handoff back"| FanIn
-    ResearchB -->|"↩️ handoff back"| FanIn
+    DeepDives -->|"yes — fan-out: research deep-dive topics"| ResearchA
+    DeepDives -->|"yes — fan-out: research deep-dive topics"| ResearchB
+    ResearchA -->|"handoff back"| FanIn
+    ResearchB -->|"handoff back"| FanIn
     DeepDives -->|"no — skip to STEP 3"| Writer
-    FanIn -->|"STEP 3 — handoff\n✍️ Write the newsletter"| Writer
-    Writer -->|"↩️ handoff back — newsletter written"| Finalise
-    Finalise --> Output
+    FanIn -->|"STEP 3 — handoff: write the newsletter"| Writer
+    Writer --> Output
+    Writer -->|"newsletter written"| Finalise
 ```
 
 Parallelism note: when multiple deep-dive rows are queued in `nl_research`,

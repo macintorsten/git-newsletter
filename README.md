@@ -17,19 +17,19 @@ Flow reference: see [`.github/agents/FLOW.md`](.github/agents/FLOW.md).
 
 ```mermaid
 flowchart LR
-    Editor(["newsletter-editor\norchestrator"])
+    Editor(["newsletter-editor<br/>orchestrator"])
     Analyst["commit-analyst"]
-    Researcher["web-researcher\noptional"]
+    Researcher["web-researcher<br/>optional"]
     Writer["newsletter-writer"]
     Output([newsletter_output.md])
 
     Editor -->|"STEP 1"| Analyst
     Analyst -->|done| Editor
-    Editor -->|"STEP 2\noptional"| Researcher
+    Editor -->|"STEP 2 optional"| Researcher
     Researcher -->|done| Editor
     Editor -->|"STEP 3"| Writer
+    Writer --> Output
     Writer -->|done| Editor
-    Editor --> Output
 ```
 
 - [`newsletter-editor`](.github/agents/newsletter-editor.agent.md) is the orchestrator and entrypoint.
