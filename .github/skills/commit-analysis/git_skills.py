@@ -28,6 +28,12 @@ single skill function and receive JSON output on stdout:
     uv run git_skills.py --action stale-branches  --repo <path> [--stale-after 30]
     uv run git_skills.py --action merged-branches --repo <path> [--target-branch main] [--days 7]
     uv run git_skills.py --action commit-diff     --repo <path> --sha <sha>
+    uv run git_skills.py --action git-cmd         --repo <path> --git-args "log --oneline -5"
+
+The ``git-cmd`` action is an escape hatch for any git operation not covered by
+the named actions above.  ``--git-args`` accepts a space-separated git
+subcommand and its flags (e.g. ``"shortlog -sn HEAD"``).  The output is
+returned as ``{"output": "<raw text>"}``.
 
 All functions return plain JSON-serialisable dicts / lists so they can be
 written directly into the session database.
@@ -50,6 +56,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import json
+import shlex
 import shutil
 import sys
 import tempfile
@@ -356,7 +363,7 @@ def get_commit_diff(repo_path: str, sha: str) -> str:
 # CLI entry point
 # ---------------------------------------------------------------------------
 
-_ACTIONS = ("recent-commits", "branch-activity", "stale-branches", "merged-branches", "commit-diff")
+_ACTIONS = ("recent-commits", "branch-activity", "stale-branches", "merged-branches", "commit-diff", "git-cmd")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -369,6 +376,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "  stale-branches   Branches with no commits in the last N days.\n"
             "  merged-branches  Branches merged into target within the last N days.\n"
             "  commit-diff      Full unified diff for a single commit SHA.\n"
+            "  git-cmd          Run an arbitrary git subcommand and return its output.\n"
+            "                   Escape hatch for operations not covered by the actions\n"
+            "                   above.  Provide the subcommand + args via --git-args.\n"
+            "                   Uses the same repo handle and authentication as the\n"
+            "                   built-in actions (SSH keys, credential helpers, etc.).\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -385,6 +397,16 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--days", type=int, default=7, help="Look-back window in days (default: 7)")
     parser.add_argument("--stale-after", type=int, default=30, help="Days before a branch is considered stale (default: 30)")
     parser.add_argument("--sha", default=None, help="Commit SHA for commit-diff action")
+    parser.add_argument(
+        "--git-args",
+        default=None,
+        help=(
+            "Git subcommand and arguments for the git-cmd action, parsed with "
+            "shell-like quoting rules (e.g. 'log --oneline -5' or "
+            "'log --grep=\"fix bug\"'). "
+            "Wrap the whole value in quotes when calling from the shell."
+        ),
+    )
     return parser
 
 
@@ -401,10 +423,17 @@ def _main() -> None:
             result = get_stale_branches(args.repo, args.stale_after)
         elif args.action == "merged-branches":
             result = get_merged_branches(args.repo, args.target_branch, args.days)
-        else:  # commit-diff
+        elif args.action == "commit-diff":
             if not args.sha:
                 parser.error("--sha is required for the commit-diff action")
             result = get_commit_diff(args.repo, args.sha)
+        else:  # git-cmd
+            if not args.git_args:
+                parser.error("--git-args is required for the git-cmd action")
+            repo = _open_repo(args.repo)
+            git_argv = shlex.split(args.git_args)
+            output = repo.git.execute(["git"] + git_argv)
+            result = {"output": output}
     except Exception as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         sys.exit(1)

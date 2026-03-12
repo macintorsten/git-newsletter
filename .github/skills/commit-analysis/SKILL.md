@@ -66,6 +66,30 @@ uv run .github/skills/commit-analysis/git_skills.py \
 
 Each command prints a JSON array to stdout. Parse and store the result.
 
+If you need a git operation that is not covered by the actions above, use the
+**`git-cmd` escape hatch** — it accepts any git subcommand and its flags via
+`--git-args` and returns the raw text output wrapped in a JSON object
+(`{"output": "…"}`).  Authentication works identically to the named actions
+because `git-cmd` uses the same underlying repo handle, which in turn calls the
+real `git` binary.  This means SSH keys, credential helpers, `GIT_ASKPASS`,
+`GITHUB_TOKEN`, and any other mechanism that works with the `git` CLI also works
+here.
+
+```bash
+# Arbitrary git operation — escape hatch for anything not covered above:
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action git-cmd --repo <repo_path> --git-args "shortlog -sn HEAD"
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action git-cmd --repo <repo_path> --git-args "log --oneline --graph -10"
+```
+
+> **Authentication note:** GitPython delegates all network operations to the
+> real `git` binary, so authentication behaves identically to running `git`
+> directly on the command line.  SSH keys, `~/.netrc`, credential helpers,
+> `GIT_ASKPASS`, and `GITHUB_TOKEN`-backed credential stores all work as
+> expected.  There is no separate auth configuration required.
+
 Alternatively, when already running inside a Python process that has
 `gitpython` installed, import the functions directly:
 
@@ -85,7 +109,7 @@ merged_branches = get_merged_branches(repo_path, branch, period_days)
 
 Supports both local filesystem paths and remote URLs. Remote URLs are cloned
 once and cached; authentication uses the environment (SSH keys, credential
-helpers, etc.).
+helpers, `GITHUB_TOKEN`, etc.) — identical to the `git` CLI.
 
 #### Step 3 — persist commits
 
