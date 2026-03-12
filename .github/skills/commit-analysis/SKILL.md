@@ -85,13 +85,16 @@ uv run .github/skills/commit-analysis/git_skills.py \
 Each command prints a JSON array to stdout. Parse and store the result.
 
 If you need a git operation that is not covered by the actions above, use the
-**`git-cmd` escape hatch** — it accepts any git subcommand and its flags via
-`--git-args` and returns the raw text output wrapped in a JSON object
-(`{"output": "…"}`).  Authentication works identically to the named actions
-because `git-cmd` uses the same underlying repo handle, which in turn calls the
-real `git` binary.  This means SSH keys, credential helpers, `GIT_ASKPASS`,
-`GITHUB_TOKEN`, and any other mechanism that works with the `git` CLI also works
-here.
+**`git-cmd` escape hatch**.  It has two concrete advantages over calling the
+`git` binary directly:
+
+1. **JSON output** — the result is wrapped in `{"output": "…"}`, matching the
+   same structured contract as every other action.  Parsers never need to
+   special-case this command.
+2. **Remote-URL auto-clone** — if `--repo` is a URL, the repository is cloned
+   automatically, just like the named actions.  No manual clone step required.
+
+`--git-args` accepts any git subcommand and its flags as a single quoted string:
 
 ```bash
 # Arbitrary git operation — escape hatch for anything not covered above:
@@ -101,12 +104,6 @@ python .github/skills/commit-analysis/git_skills.py \
 python .github/skills/commit-analysis/git_skills.py \
     --action git-cmd --repo <repo_path> --git-args "log --oneline --graph -10"
 ```
-
-> **Authentication note:** GitPython delegates all network operations to the
-> real `git` binary, so authentication behaves identically to running `git`
-> directly on the command line.  SSH keys, `~/.netrc`, credential helpers,
-> `GIT_ASKPASS`, and `GITHUB_TOKEN`-backed credential stores all work as
-> expected.  There is no separate auth configuration required.
 
 Alternatively, when already running inside a Python process that has
 `gitpython` installed, import the functions directly:

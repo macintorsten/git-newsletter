@@ -20,20 +20,29 @@ Import and call any public function directly from Python:
 
 ## CLI usage
 
-Run with ``uv run git_skills.py --action <action> [options]`` to execute a
-single skill function and receive JSON output on stdout:
+Run ``python git_skills.py --action <action> [options]`` (or ``uv run git_skills.py …``)
+to execute a single skill function and receive JSON output on stdout:
 
-    uv run git_skills.py --action recent-commits  --repo <path> [--branch main] [--days 7]
-    uv run git_skills.py --action branch-activity --repo <path> [--days 7]
-    uv run git_skills.py --action stale-branches  --repo <path> [--stale-after 30]
-    uv run git_skills.py --action merged-branches --repo <path> [--target-branch main] [--days 7]
-    uv run git_skills.py --action commit-diff     --repo <path> --sha <sha>
-    uv run git_skills.py --action git-cmd         --repo <path> --git-args "log --oneline -5"
+    python git_skills.py --action recent-commits  --repo <path> [--branch main] [--days 7]
+    python git_skills.py --action branch-activity --repo <path> [--days 7]
+    python git_skills.py --action stale-branches  --repo <path> [--stale-after 30]
+    python git_skills.py --action merged-branches --repo <path> [--target-branch main] [--days 7]
+    python git_skills.py --action commit-diff     --repo <path> --sha <sha>
+    python git_skills.py --action git-cmd         --repo <path> --git-args "log --oneline -5"
 
-The ``git-cmd`` action is an escape hatch for any git operation not covered by
-the named actions above.  ``--git-args`` accepts a space-separated git
-subcommand and its flags (e.g. ``"shortlog -sn HEAD"``).  The output is
-returned as ``{"output": "<raw text>"}``.
+The ``git-cmd`` action runs an arbitrary git subcommand and returns its output
+wrapped in a JSON object (``{"output": "<raw text>"}``).  It exists for
+operations not covered by the named actions above, and has two concrete
+advantages over calling the ``git`` binary directly:
+
+1. **JSON output** — the result fits the same structured JSON contract as every
+   other action, so parsers never need special-casing.
+2. **Remote-URL auto-clone** — if ``--repo`` is a URL, the repository is cloned
+   automatically into a temp directory (identical behaviour to the named
+   actions), so you do not need to clone it yourself first.
+
+``--git-args`` accepts a space-separated git subcommand and its flags
+(e.g. ``"shortlog -sn HEAD"``).
 
 All functions return plain JSON-serialisable dicts / lists so they can be
 written directly into the session database.
@@ -376,11 +385,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "  stale-branches   Branches with no commits in the last N days.\n"
             "  merged-branches  Branches merged into target within the last N days.\n"
             "  commit-diff      Full unified diff for a single commit SHA.\n"
-            "  git-cmd          Run an arbitrary git subcommand and return its output.\n"
-            "                   Escape hatch for operations not covered by the actions\n"
-            "                   above.  Provide the subcommand + args via --git-args.\n"
-            "                   Uses the same repo handle and authentication as the\n"
-            "                   built-in actions (SSH keys, credential helpers, etc.).\n"
+            "  git-cmd          Run an arbitrary git subcommand and return its output\n"
+            "                   as JSON ({\"output\": \"...\"}).  Two benefits over a raw\n"
+            "                   git call: (1) output is JSON like every other action, and\n"
+            "                   (2) if --repo is a URL the repository is auto-cloned.\n"
+            "                   Provide the subcommand + args via --git-args.\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
