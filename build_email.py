@@ -19,7 +19,7 @@ if sys.version_info < (3, 11):
             sys.version_info[2],
         )
     )
-    sys.stderr.write("Use 'python3' or 'uv run python'.\n")
+    sys.stderr.write("Use 'uv run build_email.py' to let uv select a compatible interpreter.\n")
     raise SystemExit(1)
 
 
@@ -117,9 +117,9 @@ def main():
         import markdown
     except ImportError as exc:
         print(
-            "Error: missing dependency. Install project dependencies with '\\n"
-            "  uv sync\\n"
-            "or use a venv and pip before running this script.",
+            "Error: missing dependency. Run this script with:\n"
+            "  uv run build_email.py\n"
+            "to let uv resolve dependencies automatically.",
             file=sys.stderr,
         )
         print("Import error: {}".format(exc), file=sys.stderr)

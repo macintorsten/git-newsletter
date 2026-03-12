@@ -1,9 +1,33 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "gitpython>=3.1.40",
+# ]
+# ///
 """
 Git skill implementations.
 
 These functions are the low-level building blocks used by the GitSource adapter
 and can also be called directly by VS Code Copilot agents that follow the
 commit-analysis SKILL.md instructions.
+
+## Library usage
+
+Import and call any public function directly from Python:
+
+    from git_skills import get_recent_commits, get_branch_activity, ...
+
+## CLI usage
+
+Run with ``uv run git_skills.py --action <action> [options]`` to execute a
+single skill function and receive JSON output on stdout:
+
+    uv run git_skills.py --action recent-commits  --repo <path> [--branch main] [--days 7]
+    uv run git_skills.py --action branch-activity --repo <path> [--days 7]
+    uv run git_skills.py --action stale-branches  --repo <path> [--stale-after 30]
+    uv run git_skills.py --action merged-branches --repo <path> [--target-branch main] [--days 7]
+    uv run git_skills.py --action commit-diff     --repo <path> --sha <sha>
 
 All functions return plain JSON-serialisable dicts / lists so they can be
 written directly into the session database.
@@ -23,8 +47,11 @@ Dependencies: gitpython (git)
 
 from __future__ import annotations
 
+import argparse
 import atexit
+import json
 import shutil
+import sys
 import tempfile
 from datetime import datetime, timezone, timedelta
 from typing import Any, Iterator
@@ -323,3 +350,67 @@ def get_commit_diff(repo_path: str, sha: str) -> str:
         return repo.git.show(sha, "--unified=3")
     except Exception as exc:
         return f"Could not retrieve diff for {sha}: {exc}"
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+_ACTIONS = ("recent-commits", "branch-activity", "stale-branches", "merged-branches", "commit-diff")
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run a single git skill function and print JSON to stdout.\n\n"
+            "Actions:\n"
+            "  recent-commits   Commits on a branch within the last N days.\n"
+            "  branch-activity  Activity summary for all branches.\n"
+            "  stale-branches   Branches with no commits in the last N days.\n"
+            "  merged-branches  Branches merged into target within the last N days.\n"
+            "  commit-diff      Full unified diff for a single commit SHA.\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=_ACTIONS,
+        metavar="ACTION",
+        help="Skill to run: " + ", ".join(_ACTIONS),
+    )
+    parser.add_argument("--repo", required=True, help="Local path or remote URL of the repository")
+    parser.add_argument("--branch", default="main", help="Branch name (default: main)")
+    parser.add_argument("--target-branch", default="main", help="Target branch for merged-branches (default: main)")
+    parser.add_argument("--days", type=int, default=7, help="Look-back window in days (default: 7)")
+    parser.add_argument("--stale-after", type=int, default=30, help="Days before a branch is considered stale (default: 30)")
+    parser.add_argument("--sha", default=None, help="Commit SHA for commit-diff action")
+    return parser
+
+
+def _main() -> None:
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    try:
+        if args.action == "recent-commits":
+            result: Any = get_recent_commits(args.repo, args.branch, args.days)
+        elif args.action == "branch-activity":
+            result = get_branch_activity(args.repo, args.days)
+        elif args.action == "stale-branches":
+            result = get_stale_branches(args.repo, args.stale_after)
+        elif args.action == "merged-branches":
+            result = get_merged_branches(args.repo, args.target_branch, args.days)
+        else:  # commit-diff
+            if not args.sha:
+                parser.error("--sha is required for the commit-diff action")
+            result = get_commit_diff(args.repo, args.sha)
+    except Exception as exc:
+        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        sys.exit(1)
+
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    _main()

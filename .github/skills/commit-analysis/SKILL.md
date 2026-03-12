@@ -34,6 +34,10 @@ Idempotency contract:
 `.github/skills/commit-analysis/`. Use it to collect data, then persist the results to
 `session_store`.
 
+`git_skills.py` carries PEP 723 inline metadata, so no venv activation is
+needed — run it with `uv run` and it installs `gitpython` automatically on
+first use.
+
 #### Step 1 — read session parameters
 
 ```sql
@@ -43,6 +47,27 @@ FROM   nl_sessions WHERE session_id = '<session_id>';
 ```
 
 #### Step 2 — run the git helpers
+
+Run each command and parse the JSON output:
+
+```bash
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo <repo_path> --branch <branch> --days <period_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action branch-activity --repo <repo_path> --days <period_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action stale-branches --repo <repo_path> --stale-after <stale_after_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action merged-branches --repo <repo_path> --target-branch <branch> --days <period_days>
+```
+
+Each command prints a JSON array to stdout. Parse and store the result.
+
+Alternatively, when already running inside a Python process that has
+`gitpython` installed, import the functions directly:
 
 ```python
 from git_skills import (

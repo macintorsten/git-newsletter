@@ -17,9 +17,9 @@ def main():
         from dotenv import load_dotenv
     except ImportError as exc:
         print(
-            "Error: missing dependency 'python-dotenv'. Install dependencies with '\\n"
-            "  uv sync\\n"
-            "or use a venv and pip before running this script.",
+            "Error: missing dependency 'python-dotenv'. Run this script with:\n"
+            "  uv run send_email.py\n"
+            "to let uv resolve dependencies automatically.",
             file=sys.stderr,
         )
         print(f"Import error: {exc}", file=sys.stderr)
