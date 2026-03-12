@@ -49,8 +49,8 @@ Create a venv once and activate it:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
-pip install -r requirements.txt # or: pip install markdown css-inline python-dotenv gitpython jinja2
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install .              # reads dependencies from pyproject.toml
 ```
 
 Then run the scripts directly:
