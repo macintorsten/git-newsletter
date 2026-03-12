@@ -43,14 +43,27 @@ flowchart LR
 
 Use Python 3.11+.
 
+### Option A — venv (standard Python tooling)
+
+Create a venv once and activate it:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
+pip install -r requirements.txt # or: pip install markdown css-inline python-dotenv gitpython jinja2
+```
+
+Then run the scripts directly:
+
+```bash
+python build_email.py --help
+python send_email.py --help
+python generate_examples.py
+```
+
+### Option B — uv (zero-setup, dependency-isolated)
+
 Install `uv`: https://docs.astral.sh/uv/getting-started/installation/
-
-### Running scripts (no venv needed)
-
-The standalone scripts (`build_email.py`, `send_email.py`,
-`generate_examples.py`) declare their own dependencies using
-[PEP 723](https://peps.python.org/pep-0723/) inline script metadata.
-Run them directly with `uv run` — no venv activation required:
 
 ```bash
 uv run build_email.py --help
@@ -58,11 +71,12 @@ uv run send_email.py --help
 uv run generate_examples.py
 ```
 
-`uv` reads the inline `# /// script … # ///` block, installs the required
-packages into an isolated cache on first run, and reuses that cache on
-subsequent runs.
+`uv` reads the `# /// script … # ///`
+[PEP 723](https://peps.python.org/pep-0723/) block at the top of each script,
+installs the required packages into an isolated cache on first run, and reuses
+that cache on subsequent runs — no venv activation required.
 
-### Development / IDE setup (optional)
+### Option C — uv sync (shared venv for IDE tooling)
 
 To get IDE auto-complete and to make `gitpython` available for the
 commit-analysis skill, create a shared venv once with:
@@ -73,11 +87,11 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
 `pyproject.toml` lists all project dependencies and is the single source of
-truth for `uv sync`.  The file can be kept as-is alongside PEP 723 scripts.
+truth for `uv sync`.
 
 The agents (especially commit analysis) execute Python helpers under
 `.github/skills/`, so `gitpython` must be importable in the agent's Python
-environment — `uv sync` covers this.
+environment — any of the options above covers this.
 
 ## Quickstart (Copilot CLI)
 
@@ -109,12 +123,12 @@ Available profile prompts:
 - `.github/prompts/profiles/examples/example-kubernetes-weekly.prompt.md`
 - `.github/prompts/profiles/examples/example-flask-monthly.prompt.md`
 
-Run utility scripts with:
+Run utility scripts with (activate your venv first, or prefix with `uv run`):
 
 ```bash
-uv run build_email.py --help
-uv run send_email.py --help
-uv run generate_examples.py
+python build_email.py --help
+python send_email.py --help
+python generate_examples.py
 ```
 
 ## Extra scripts (after markdown is generated)
@@ -124,7 +138,7 @@ These scripts do not call Copilot. They are optional post-processing tools.
 1. Markdown/CSS to HTML:
 
 ```bash
-uv run build_email.py \
+python build_email.py \
   --markdown samples/email/example_input.md \
   --style assets/email/styles/01-clean-blue.css \
   --output preview_output/ready_to_send.html
@@ -133,7 +147,7 @@ uv run build_email.py \
 2. Generate all preview examples:
 
 ```bash
-uv run generate_examples.py
+python generate_examples.py
 ```
 
 Open `preview_output/generated_html/index.html` in your browser and click through the generated files.
@@ -141,7 +155,7 @@ Open `preview_output/generated_html/index.html` in your browser and click throug
 3. Send over SMTP (optional):
 
 ```bash
-uv run send_email.py \
+python send_email.py \
   --html preview_output/ready_to_send.html \
   --markdown samples/email/example_input.md \
   --to recipient@example.com \

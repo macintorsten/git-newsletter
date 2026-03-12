@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
@@ -13,6 +13,7 @@ All output files are written into preview_output/generated_html/.
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -32,8 +33,7 @@ def run_build(
     no_max_width: bool = False,
 ) -> None:
     cmd = [
-        "uv",
-        "run",
+        sys.executable,
         str(ROOT / "build_email.py"),
         "--markdown",
         str(MARKDOWN_FILE),

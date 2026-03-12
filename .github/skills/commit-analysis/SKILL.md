@@ -34,9 +34,9 @@ Idempotency contract:
 `.github/skills/commit-analysis/`. Use it to collect data, then persist the results to
 `session_store`.
 
-`git_skills.py` carries PEP 723 inline metadata, so no venv activation is
-needed — run it with `uv run` and it installs `gitpython` automatically on
-first use.
+`git_skills.py` carries PEP 723 inline metadata which documents its
+dependencies.  Run it with an activated venv (`python git_skills.py …`) or
+with `uv run` (`uv run git_skills.py …`) — both work equally well.
 
 #### Step 1 — read session parameters
 
@@ -48,7 +48,25 @@ FROM   nl_sessions WHERE session_id = '<session_id>';
 
 #### Step 2 — run the git helpers
 
-Run each command and parse the JSON output:
+Run each command and parse the JSON output.
+
+With an activated venv or system Python:
+
+```bash
+python .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo <repo_path> --branch <branch> --days <period_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action branch-activity --repo <repo_path> --days <period_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action stale-branches --repo <repo_path> --stale-after <stale_after_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action merged-branches --repo <repo_path> --target-branch <branch> --days <period_days>
+```
+
+Alternatively, using `uv run` (installs `gitpython` automatically, no venv needed):
 
 ```bash
 uv run .github/skills/commit-analysis/git_skills.py \
@@ -77,10 +95,10 @@ here.
 
 ```bash
 # Arbitrary git operation — escape hatch for anything not covered above:
-uv run .github/skills/commit-analysis/git_skills.py \
+python .github/skills/commit-analysis/git_skills.py \
     --action git-cmd --repo <repo_path> --git-args "shortlog -sn HEAD"
 
-uv run .github/skills/commit-analysis/git_skills.py \
+python .github/skills/commit-analysis/git_skills.py \
     --action git-cmd --repo <repo_path> --git-args "log --oneline --graph -10"
 ```
 
