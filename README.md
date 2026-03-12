@@ -11,7 +11,7 @@ It analyzes a repository and produces newsletter markdown as output.
    articles, optionally research deep dives, and assemble final markdown.
 4. The main artifact is a markdown newsletter file.
 
-Flow reference: see [`.github/agents/FLOW.md`](.github/agents/FLOW.md).
+Flow reference: see [`.github/FLOW.md`](.github/FLOW.md).
 
 ## Agent workflow (simplified)
 

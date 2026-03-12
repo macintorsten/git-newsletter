@@ -40,7 +40,7 @@ Commit intent:
 - Make stage progression explicit and deterministic.
 
 Files:
-- `.github/agents/FLOW.md`
+- `.github/FLOW.md`
 - `.github/agents/newsletter-editor.agent.md`
 
 Tasks:
@@ -115,7 +115,7 @@ Files:
 - `.github/agents/newsletter-editor.agent.md`
 - `.github/agents/web-researcher.agent.md`
 - `.github/skills/web-research/SKILL.md`
-- `.github/agents/FLOW.md`
+- `.github/FLOW.md`
 
 Tasks:
 - [x] Add orchestrator guidance to split pending research into shards/batches.
@@ -208,7 +208,7 @@ Commit intent:
 
 Files:
 - `README.md`
-- `.github/agents/FLOW.md`
+- `.github/FLOW.md`
 - `docs/agent-flow-improvements-plan.md`
 
 Tasks:

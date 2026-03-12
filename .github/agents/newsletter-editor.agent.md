@@ -65,7 +65,7 @@ Input resolution rules:
 | `web-researcher` | Research external topics for deep dives |
 | `newsletter-writer` | Assemble the final Markdown newsletter |
 
-See [FLOW.md](FLOW.md) for the full agent interaction diagram.
+See [FLOW.md](../FLOW.md) for the full agent interaction diagram.
 
 ## Session initialisation
 
