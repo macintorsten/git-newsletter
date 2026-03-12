@@ -1,11 +1,3 @@
----
-title: "Dev Weekly — VS Code · 4 Mar – 10 Mar 2026"
-period_days: 7
-repo: "https://github.com/microsoft/vscode.git"
-branch: "main"
-generated_at: "2026-03-10T22:06:20Z"
----
-
 # 📰 Dev Weekly — VS Code
 
 > *A massive week for AI-assisted development: the Sessions feature matured dramatically, the Debug Panel gained OpenTelemetry superpowers, and a wave of performance, terminal, and security improvements landed across the board — 420 commits from dozens of contributors.*

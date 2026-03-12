@@ -28,7 +28,7 @@
     }
 
     .wrap {
-      max-width: 1280px;
+      max-width: 1360px;
       margin: 0 auto;
       padding: 28px;
     }
@@ -46,7 +46,8 @@
     .grid {
       display: grid;
       gap: 16px;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      grid-template-columns: repeat(auto-fill, 640px);
+      justify-content: center;
     }
 
     .card {
@@ -58,6 +59,10 @@
     }
 
     .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 14px 16px;
       border-bottom: 1px solid var(--line);
       background: #f8fafc;
@@ -69,18 +74,15 @@
     }
 
     .card-header p {
-      margin: 6px 0 0;
+      margin: 4px 0 0;
       color: var(--muted);
       font-size: 0.86rem;
     }
 
-    .actions {
+    .card-header .actions {
       display: flex;
-      gap: 10px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-      background: #ffffff;
-      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .btn {
@@ -94,20 +96,20 @@
       font-size: 0.85rem;
     }
 
-    .btn-wide {
-      border-color: #fbcfe8;
-      color: #9d174d;
-      background: #fdf2f8;
+    .btn-flowing {
+      border-color: #bbf7d0;
+      color: #166534;
+      background: #f0fdf4;
     }
 
     .previews {
-      padding: 12px;
-      background: #f8fafc;
+      padding: 0;
+      background: #fff;
     }
 
     .previews section {
-      border: 1px solid var(--line);
-      border-radius: 10px;
+      border: none;
+      border-radius: 0;
       background: #fff;
       overflow: hidden;
     }
@@ -123,7 +125,8 @@
 
     iframe {
       width: 100%;
-      height: 300px;
+      min-width: 600px;
+      height: 320px;
       border: 0;
       display: block;
       background: #fff;
@@ -134,6 +137,7 @@
         grid-template-columns: 1fr;
       }
       .previews {
+        grid-template-columns: 1fr;
         padding: 10px;
       }
     }
@@ -142,22 +146,24 @@
 <body>
   <main class="wrap">
     <h1>Newsletter Style Gallery</h1>
-    <p class="lead">Each card includes standard and wide outputs (wide max-width: {{ wide_width }}).</p>
+    <p class="lead">Each card previews the theme at fixed width (600 px, email-safe) and flowing (full window width).</p>
     <section class="grid">
       {% for card in cards %}
       <article class="card">
         <header class="card-header">
-          <h2>{{ card.title }}</h2>
-          <p>{{ card.style_file }}</p>
+          <div>
+            <h2>{{ card.title }}</h2>
+            <p>{{ card.style_file }}</p>
+          </div>
+          <div class="actions">
+            <a class="btn" href="{{ card.fixed_file }}" target="_blank" rel="noopener noreferrer">Open Fixed (600 px)</a>
+            <a class="btn btn-flowing" href="{{ card.flowing_file }}" target="_blank" rel="noopener noreferrer">Open Flowing</a>
+          </div>
         </header>
-        <div class="actions">
-          <a class="btn" href="{{ card.standard_file }}" target="_blank" rel="noopener noreferrer">Open Standard</a>
-          <a class="btn btn-wide" href="{{ card.wide_file }}" target="_blank" rel="noopener noreferrer">Open Wide</a>
-        </div>
         <div class="previews">
           <section>
-            <h3>Standard</h3>
-            <iframe src="{{ card.standard_file }}" title="{{ card.title }} standard"></iframe>
+            <h3>Preview</h3>
+            <iframe src="{{ card.fixed_file }}" title="{{ card.title }} preview"></iframe>
           </section>
         </div>
       </article>

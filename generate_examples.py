@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate standard + wide example HTML previews and a single index.
+"""Generate fixed-width (600 px) + flowing example HTML previews and a single index.
 
 All output files are written into preview_output/generated_html/.
 """
@@ -15,14 +15,18 @@ from jinja2 import Environment, FileSystemLoader
 
 ROOT = Path(__file__).resolve().parent
 PYTHON_EXE = sys.executable
-MARKDOWN_FILE = ROOT / "samples/email/example_input.md"
+MARKDOWN_FILE = ROOT / "samples/email/vscode-weekly-newsletter-2026-03-10.md"
 STYLES_DIR = ROOT / "assets/email/styles"
 OUTPUT_DIR = ROOT / "preview_output/generated_html"
 INDEX_TEMPLATE = ROOT / "assets/email/templates/index.html.j2"
-WIDE_WIDTH = "700px"
 
 
-def run_build(style_file: Path, output_file: Path, max_width: str | None = None) -> None:
+def run_build(
+    style_file: Path,
+    output_file: Path,
+    max_width: str | None = None,
+    no_max_width: bool = False,
+) -> None:
     cmd = [
         PYTHON_EXE,
         str(ROOT / "build_email.py"),
@@ -33,7 +37,9 @@ def run_build(style_file: Path, output_file: Path, max_width: str | None = None)
         "--output",
         str(output_file),
     ]
-    if max_width:
+    if no_max_width:
+        cmd.append("--no-max-width")
+    elif max_width:
         cmd.extend(["--max-width", max_width])
 
     subprocess.run(cmd, check=True)
@@ -42,7 +48,7 @@ def run_build(style_file: Path, output_file: Path, max_width: str | None = None)
 def render_index(cards: list[dict[str, str]]) -> None:
     env = Environment(loader=FileSystemLoader(str(INDEX_TEMPLATE.parent)), autoescape=True)
     template = env.get_template(INDEX_TEMPLATE.name)
-    html = template.render(cards=cards, wide_width=WIDE_WIDTH)
+    html = template.render(cards=cards)
     (OUTPUT_DIR / "index.html").write_text(html, encoding="utf-8")
 
 
@@ -62,22 +68,24 @@ def main() -> int:
     cards: list[dict[str, str]] = []
     for style_file in style_files:
         stem = style_file.stem
-        standard_name = f"{stem}.html"
-        wide_name = f"{stem}-wide.html"
+        fixed_name = f"{stem}-fixed.html"
+        flowing_name = f"{stem}-flowing.html"
 
-        run_build(style_file=style_file, output_file=OUTPUT_DIR / standard_name)
+        # Fixed width: 600 px is the widely accepted safe email column width.
+        run_build(style_file=style_file, output_file=OUTPUT_DIR / fixed_name)
+        # Flowing: no max-width, fills the reader's window.
         run_build(
             style_file=style_file,
-            output_file=OUTPUT_DIR / wide_name,
-            max_width=WIDE_WIDTH,
+            output_file=OUTPUT_DIR / flowing_name,
+            no_max_width=True,
         )
 
         cards.append(
             {
                 "title": stem.replace("-", " ").title(),
                 "style_file": style_file.name,
-                "standard_file": standard_name,
-                "wide_file": wide_name,
+                "fixed_file": fixed_name,
+                "flowing_file": flowing_name,
             }
         )
 
