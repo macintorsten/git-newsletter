@@ -22,6 +22,11 @@ def main():
 
     parser = argparse.ArgumentParser(description="Send an HTML email via SMTP.")
     parser.add_argument("--html", required=True, help="Path to the HTML file to send")
+    parser.add_argument(
+        "--markdown",
+        default=None,
+        help="Path to the Markdown file to use as the plain text body (optional)",
+    )
     parser.add_argument("--to", required=True, help="Recipient email address")
     parser.add_argument("--subject", required=True, help="Email subject line")
     parser.add_argument(
@@ -81,15 +86,24 @@ def main():
     try:
         with open(args.html, "r", encoding="utf-8") as file:
             html_content = file.read()
-    except FileNotFoundError:
-        print(f"Error: Could not find HTML file {args.html}")
+    except OSError as e:
+        print(f"Error: Could not read HTML file {args.html}: {e}")
         sys.exit(1)
+
+    plain_text = "Please enable HTML to view this email."
+    if args.markdown:
+        try:
+            with open(args.markdown, "r", encoding="utf-8") as md_file:
+                plain_text = md_file.read()
+        except OSError as e:
+            print(f"Error: Could not read Markdown file {args.markdown}: {e}")
+            sys.exit(1)
 
     msg = EmailMessage()
     msg["Subject"] = args.subject
     msg["From"] = sender_email
     msg["To"] = args.to
-    msg.set_content("Please enable HTML to view this email.")
+    msg.set_content(plain_text)
     msg.add_alternative(html_content, subtype="html")
 
     try:
