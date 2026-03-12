@@ -120,6 +120,9 @@ Open `preview_output/generated_html/index.html` in your browser and click throug
 ```bash
 uv run python send_email.py \
   --html preview_output/ready_to_send.html \
+  --markdown samples/email/example_input.md \
   --to recipient@example.com \
   --subject "Automated Markdown Newsletter"
 ```
+
+Pass `--markdown` to include the Markdown source as the plain text alternative alongside the HTML body. Omit it to fall back to a minimal "Please enable HTML" placeholder.
