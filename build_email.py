@@ -157,8 +157,12 @@ def main():
 
     # Wrap in boilerplate
     full_html = """<!DOCTYPE html>
-<html>
-<head><style>{css_content}{width_override}</style></head>
+<html lang=\"en\">
+<head>
+<meta charset=\"utf-8\" />
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+<style>{css_content}{width_override}</style>
+</head>
 <body>{raw_html}</body>
 </html>
 """.format(

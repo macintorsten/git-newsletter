@@ -11,43 +11,62 @@ body {
     margin: 0 auto;
     padding: 0;
     background-color: #f0fdf4;
+    border: 1px solid #bfe5d1;
+    border-top: 10px solid #047857;
 }
 
-/* Header banner */
 h1 {
-    font-size: 24px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 28px;
     color: #ffffff;
     background-color: #064e3b;
     margin: 0;
-    padding: 24px 28px;
-    letter-spacing: 0.5px;
+    padding: 26px 28px 20px;
+    letter-spacing: 0.3px;
     border-bottom: 4px solid #10b981;
 }
+
 h2 {
-    font-size: 18px;
+    display: inline-block;
+    font-size: 12px;
     color: #065f46;
     margin-top: 28px;
     margin-bottom: 8px;
-    padding-left: 28px;
-    border-left: 4px solid #10b981;
+    margin-left: 28px;
+    padding: 4px 8px;
+    background-color: #ddf8ea;
+    border: 1px solid #9ad7bb;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
 }
 
 h3 {
-    font-size: 15px;
+    font-size: 22px;
     color: #047857;
-    margin-top: 20px;
-    margin-bottom: 4px;
-    padding-left: 28px;
+    margin-top: 2px;
+    margin-bottom: 10px;
+    padding: 0 28px 8px;
+    border-bottom: 1px solid #b7e4cf;
+}
+
+h4 {
+    font-size: 15px;
+    color: #166534;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    padding: 0 28px;
+    line-height: 1.4;
 }
 
 p {
-    margin: 12px 0;
+    margin: 14px 0;
     padding: 0 28px;
 }
 
 a {
     color: #059669;
-    text-decoration: none;
+    text-decoration: underline;
     font-weight: bold;
 }
 
@@ -62,12 +81,16 @@ li {
 
 blockquote {
     margin: 20px 28px;
-    padding: 16px 20px;
+    padding: 18px 20px;
     background-color: #d1fae5;
     border-left: 5px solid #10b981;
     color: #065f46;
     font-style: italic;
-    border-radius: 0 6px 6px 0;
+}
+
+blockquote p {
+    margin: 0;
+    padding: 0;
 }
 
 table {
@@ -90,6 +113,10 @@ td {
     border-bottom: 1px solid #a7f3d0;
 }
 
+table code {
+    background-color: #ecfdf5;
+}
+
 tr:nth-child(even) td {
     background-color: #ecfdf5;
 }
@@ -107,4 +134,5 @@ code {
     border-radius: 3px;
     font-size: 13px;
     font-family: "Courier New", Courier, monospace;
+    border: 1px solid #9ad7bb;
 }

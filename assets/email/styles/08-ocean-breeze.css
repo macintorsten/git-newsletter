@@ -10,34 +10,58 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 28px 24px;
-    background-color: #f0f9ff;
+    background-color: #f4fbff;
+    border: 1px solid #c8eafe;
     border-top: 5px solid #0ea5e9;
+    border-radius: 18px;
 }
 
 h1 {
     font-size: 28px;
     font-weight: 300;
-    color: #0369a1;
+    color: #ffffff;
+    background-color: #0284c7;
+    background-image: linear-gradient(135deg, #0369a1, #38bdf8);
     letter-spacing: -0.5px;
-    border-bottom: 1px solid #bae6fd;
-    padding-bottom: 12px;
-    margin-bottom: 6px;
+    border-bottom: 0;
+    padding: 18px 18px 16px;
+    margin: -28px -24px 18px;
+    border-radius: 18px 18px 0 0;
+    line-height: 1.2;
 }
 
 h2 {
-    font-size: 19px;
+    display: inline-block;
+    font-size: 12px;
     font-weight: 500;
     color: #0284c7;
     margin-top: 30px;
     margin-bottom: 8px;
+    padding: 4px 8px;
+    background-color: #e0f2fe;
+    border-radius: 999px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
 }
 
 h3 {
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 600;
     color: #0369a1;
-    margin-top: 20px;
-    margin-bottom: 4px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #bae6fd;
+    line-height: 1.35;
+}
+
+h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0c4a6e;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    line-height: 1.4;
 }
 
 p {
@@ -65,11 +89,15 @@ li {
 blockquote {
     border-left: 4px solid #38bdf8;
     margin: 22px 0;
-    padding: 14px 18px;
+    padding: 16px 18px;
     background-color: #e0f2fe;
     color: #0c4a6e;
     font-style: italic;
-    border-radius: 0 6px 6px 0;
+    border-radius: 12px;
+}
+
+blockquote p {
+    margin: 0;
 }
 
 table {

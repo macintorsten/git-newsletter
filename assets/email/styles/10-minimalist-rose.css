@@ -10,7 +10,9 @@ body {
     max-width: 580px;
     margin: 0 auto;
     padding: 40px 36px;
-    background-color: #fff1f2;
+    background-color: #fff6f7;
+    border: 1px solid #fecdd3;
+    border-radius: 22px;
 }
 
 h1 {
@@ -19,29 +21,44 @@ h1 {
     color: #881337;
     text-align: center;
     letter-spacing: 2px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid #fda4af;
-    padding-bottom: 16px;
+    margin-bottom: 10px;
+    border: 1px solid #fda4af;
+    border-radius: 999px;
+    padding: 16px 18px;
 }
 
 h2 {
-    font-size: 16px;
+    display: inline-block;
+    font-size: 12px;
     font-weight: 600;
     color: #9f1239;
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-top: 34px;
     margin-bottom: 10px;
+    padding: 4px 8px;
+    background-color: #ffe4e6;
+    border-radius: 999px;
     font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
 h3 {
-    font-size: 17px;
+    font-size: 22px;
     font-weight: normal;
     color: #be123c;
     font-style: italic;
-    margin-top: 22px;
-    margin-bottom: 4px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    line-height: 1.35;
+}
+
+h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #9f1239;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    line-height: 1.4;
 }
 
 p {
@@ -74,7 +91,11 @@ blockquote {
     color: #881337;
     font-style: italic;
     font-size: 16px;
-    border-radius: 0 8px 8px 0;
+    border-radius: 14px;
+}
+
+blockquote p {
+    margin: 0;
 }
 
 table {

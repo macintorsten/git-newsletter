@@ -11,28 +11,51 @@ body {
     margin: 0 auto;
     padding: 28px 24px;
     background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 18px;
 }
 
 h1 {
     font-size: 28px;
-    color: #c2410c;
-    border-bottom: 3px solid #fed7aa;
-    padding-bottom: 10px;
-    margin-bottom: 6px;
+    color: #ffffff;
+    background-color: #ea580c;
+    background-image: linear-gradient(135deg, #c2410c, #fb923c);
+    border-bottom: 0;
+    padding: 18px 18px 16px;
+    margin: -28px -24px 18px;
+    border-radius: 18px 18px 0 0;
+    line-height: 1.2;
 }
 
 h2 {
-    font-size: 20px;
+    display: inline-block;
+    font-size: 12px;
     color: #ea580c;
     margin-top: 30px;
     margin-bottom: 8px;
+    padding: 4px 8px;
+    background-color: #ffedd5;
+    border-radius: 999px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 }
 
 h3 {
-    font-size: 16px;
+    font-size: 22px;
     color: #c2410c;
-    margin-top: 20px;
-    margin-bottom: 4px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 12px;
+    border-left: 4px solid #fb923c;
+    line-height: 1.35;
+}
+
+h4 {
+    font-size: 15px;
+    color: #9a3412;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    line-height: 1.4;
 }
 
 p {
@@ -41,9 +64,8 @@ p {
 
 a {
     color: #ea580c;
-    text-decoration: none;
+    text-decoration: underline;
     font-weight: bold;
-    border-bottom: 1px dotted #fdba74;
 }
 
 ul, ol {
@@ -58,11 +80,15 @@ li {
 blockquote {
     border-left: 5px solid #f97316;
     margin: 20px 0;
-    padding: 14px 18px;
+    padding: 16px 18px;
     background-color: #ffedd5;
     color: #7c2d12;
     font-style: italic;
-    border-radius: 0 6px 6px 0;
+    border-radius: 12px;
+}
+
+blockquote p {
+    margin: 0;
 }
 
 table {

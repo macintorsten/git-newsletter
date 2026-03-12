@@ -3,6 +3,8 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #   "jinja2>=3.1.4",
+#   "markdown>=3.5.2",
+#   "css-inline>=0.20.0",
 # ]
 # ///
 """Generate fixed-width (600 px) + flowing example HTML previews and a single index.
@@ -17,6 +19,18 @@ import sys
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
+
+
+if sys.version_info < (3, 11):
+    sys.stderr.write(
+        "Error: generate_examples.py requires Python 3.11+; got {}.{}.{}\n".format(
+            sys.version_info[0],
+            sys.version_info[1],
+            sys.version_info[2],
+        )
+    )
+    sys.stderr.write("Use 'uv run generate_examples.py' to let uv select a compatible interpreter.\n")
+    raise SystemExit(1)
 
 
 ROOT = Path(__file__).resolve().parent

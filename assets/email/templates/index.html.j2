@@ -6,87 +6,157 @@
   <title>Newsletter Style Gallery</title>
   <style>
     :root {
-      --bg: #f2f5f9;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #dbe2ea;
-      --accent: #0b63ce;
-      --accent-soft: #e8f2ff;
+      --bg: #f4f4f2;
+      --paper: #ffffff;
+      --paper-strong: #ffffff;
+      --text: #171717;
+      --muted: #666666;
+      --line: #dddddd;
+      --accent: #1f4b99;
+      --accent-soft: #edf3ff;
+      --accent-2: #4b5563;
+      --shadow: rgba(15, 23, 42, 0.05);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 20% 0%, #dbeafe 0%, transparent 40%),
-        radial-gradient(circle at 80% 0%, #e2e8f0 0%, transparent 30%),
-        var(--bg);
+      background: var(--bg);
     }
 
     .wrap {
-      max-width: 1360px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 28px;
+      padding: 24px 20px 36px;
+    }
+
+    .hero {
+      display: block;
+      margin-bottom: 18px;
+    }
+
+    .hero-copy {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
     }
 
     h1 {
       margin: 0;
-      font-size: 1.8rem;
+      font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
     }
 
     .lead {
-      margin: 8px 0 22px;
+      margin: 8px 0 0;
       color: var(--muted);
+      max-width: 58rem;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    .hero-aside {
+      display: none;
+    }
+
+    .hero-aside p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero-aside strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
     }
 
     .grid {
       display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(auto-fill, 640px);
-      justify-content: center;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
     }
 
     .card {
-      background: var(--card);
+      background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 4px 16px var(--shadow);
     }
 
     .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      padding: 14px 16px 12px;
       border-bottom: 1px solid var(--line);
-      background: #f8fafc;
+      background: #f8f8f8;
     }
 
     .card-header h2 {
       margin: 0;
-      font-size: 1.02rem;
+      font-size: 1.12rem;
+      line-height: 1.25;
     }
 
     .card-header p {
-      margin: 4px 0 0;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 0.86rem;
+      font-size: 0.9rem;
     }
 
     .card-header .actions {
       display: flex;
+      align-items: start;
+      flex-wrap: wrap;
       gap: 8px;
       flex-shrink: 0;
     }
 
     .btn {
-      border: 1px solid #bcd6fa;
+      border: 1px solid #c9d6ee;
       color: var(--accent);
       text-decoration: none;
       padding: 8px 11px;
@@ -97,56 +167,82 @@
     }
 
     .btn-flowing {
-      border-color: #bbf7d0;
-      color: #166534;
-      background: #f0fdf4;
+      border-color: #d3d7dd;
+      color: var(--accent-2);
+      background: #f2f4f7;
     }
 
     .previews {
       padding: 0;
-      background: #fff;
+      background: transparent;
     }
 
     .previews section {
-      border: none;
+      border: 0;
       border-radius: 0;
-      background: #fff;
+      background: transparent;
       overflow: hidden;
     }
 
     .previews h3 {
-      margin: 0;
-      font-size: 0.8rem;
-      padding: 7px 9px;
-      color: var(--muted);
-      border-bottom: 1px solid var(--line);
-      background: #f8fafc;
+      display: none;
     }
 
     iframe {
       width: 100%;
       min-width: 600px;
-      height: 320px;
+      height: 520px;
       border: 0;
       display: block;
       background: #fff;
+    }
+
+    @media (max-width: 980px) {
+      .wrap {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
     }
 
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
       }
-      .previews {
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        padding: 16px 12px 24px;
+      }
+      .card,
+      .previews section {
+        border-radius: 10px;
+      }
+      .card-header {
         grid-template-columns: 1fr;
-        padding: 10px;
+      }
+      .card-header .actions {
+        margin-top: 4px;
+      }
+      iframe {
+        height: 420px;
       }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>Newsletter Style Gallery</h1>
-    <p class="lead">Each card previews the theme at fixed width (600 px, email-safe) and flowing (full window width).</p>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Preview Studio</p>
+        <h1>Newsletter themes with more shape, rhythm, and hierarchy.</h1>
+        <p class="lead">The fixed view shows the email-safe 600 px column. Open a card only when you want the full standalone preview.</p>
+      </div>
+    </section>
+    <header class="section-head">
+      <h2>Theme Library</h2>
+      <p>{{ cards|length }} style previews</p>
+    </header>
     <section class="grid">
       {% for card in cards %}
       <article class="card">
