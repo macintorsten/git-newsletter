@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "jinja2>=3.1.4",
+# ]
+# ///
 """Generate fixed-width (600 px) + flowing example HTML previews and a single index.
 
 All output files are written into preview_output/generated_html/.
@@ -7,14 +13,12 @@ All output files are written into preview_output/generated_html/.
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
 
 ROOT = Path(__file__).resolve().parent
-PYTHON_EXE = sys.executable
 MARKDOWN_FILE = ROOT / "samples/email/vscode-weekly-newsletter-2026-03-10.md"
 STYLES_DIR = ROOT / "assets/email/styles"
 OUTPUT_DIR = ROOT / "preview_output/generated_html"
@@ -28,7 +32,8 @@ def run_build(
     no_max_width: bool = False,
 ) -> None:
     cmd = [
-        PYTHON_EXE,
+        "uv",
+        "run",
         str(ROOT / "build_email.py"),
         "--markdown",
         str(MARKDOWN_FILE),

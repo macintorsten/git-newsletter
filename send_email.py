@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "python-dotenv>=1.0.1",
+# ]
+# ///
+
 import argparse
 import smtplib
 import os

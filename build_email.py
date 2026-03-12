@@ -1,3 +1,11 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "markdown>=3.5.2",
+#   "css-inline>=0.20.0",
+# ]
+# ///
+
 import argparse
 import sys
 from html.parser import HTMLParser

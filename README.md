@@ -39,22 +39,45 @@ flowchart LR
 - [`newsletter-writer`](.github/agents/newsletter-writer.agent.md) assembles final newsletter markdown.
 - `newsletter-editor` returns the final output path/content.
 
-## Python setup (required once)
+## Python setup
 
 Use Python 3.11+.
 
 Install `uv`: https://docs.astral.sh/uv/getting-started/installation/
 
-Prepare dependencies and activate the environment in the shell where you run
-Copilot CLI:
+### Running scripts (no venv needed)
+
+The standalone scripts (`build_email.py`, `send_email.py`,
+`generate_examples.py`) declare their own dependencies using
+[PEP 723](https://peps.python.org/pep-0723/) inline script metadata.
+Run them directly with `uv run` — no venv activation required:
+
+```bash
+uv run build_email.py --help
+uv run send_email.py --help
+uv run generate_examples.py
+```
+
+`uv` reads the inline `# /// script … # ///` block, installs the required
+packages into an isolated cache on first run, and reuses that cache on
+subsequent runs.
+
+### Development / IDE setup (optional)
+
+To get IDE auto-complete and to make `gitpython` available for the
+commit-analysis skill, create a shared venv once with:
 
 ```bash
 uv sync
-source .venv/bin/activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
+`pyproject.toml` lists all project dependencies and is the single source of
+truth for `uv sync`.  The file can be kept as-is alongside PEP 723 scripts.
+
 The agents (especially commit analysis) execute Python helpers under
-`.github/skills/`, so missing Python packages can break the newsletter run.
+`.github/skills/`, so `gitpython` must be importable in the agent's Python
+environment — `uv sync` covers this.
 
 ## Quickstart (Copilot CLI)
 
@@ -89,9 +112,9 @@ Available profile prompts:
 Run utility scripts with:
 
 ```bash
-uv run python build_email.py --help
-uv run python send_email.py --help
-uv run python generate_examples.py
+uv run build_email.py --help
+uv run send_email.py --help
+uv run generate_examples.py
 ```
 
 ## Extra scripts (after markdown is generated)
@@ -101,7 +124,7 @@ These scripts do not call Copilot. They are optional post-processing tools.
 1. Markdown/CSS to HTML:
 
 ```bash
-uv run python build_email.py \
+uv run build_email.py \
   --markdown samples/email/example_input.md \
   --style assets/email/styles/01-clean-blue.css \
   --output preview_output/ready_to_send.html
@@ -110,7 +133,7 @@ uv run python build_email.py \
 2. Generate all preview examples:
 
 ```bash
-uv run python generate_examples.py
+uv run generate_examples.py
 ```
 
 Open `preview_output/generated_html/index.html` in your browser and click through the generated files.
@@ -118,7 +141,7 @@ Open `preview_output/generated_html/index.html` in your browser and click throug
 3. Send over SMTP (optional):
 
 ```bash
-uv run python send_email.py \
+uv run send_email.py \
   --html preview_output/ready_to_send.html \
   --markdown samples/email/example_input.md \
   --to recipient@example.com \
