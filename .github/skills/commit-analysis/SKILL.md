@@ -218,12 +218,18 @@ working on a coherent change). You decide the grouping. Good heuristics:
 
 For each group, produce a short article (150–300 words) covering:
 - **What changed** — plain English description
-- **Why it matters** — motivation from the commit message and diff
+- **Why it matters** — motivation from the commit message and diff. Ensure the
+  significance is **relevant** to the project's overall context (e.g., don't
+  overstate a typo fix, but don't under-sell a critical bug fix).
 - **Technical details** — files, functions, systems involved; explain any
-  non-obvious term a general developer might not know
+  non-obvious term a general developer might not know. **Fact-check** your
+  claims against the provided diffs—do not assume a function's purpose if the
+  diff shows something else.
 - **Who did it** — credit author(s) by name
 
 Use emojis 🎉 to lighten the tone. Tone: friendly, educational, encouraging.
+**Truthfulness requirement**: If a commit message is cryptic and the diff is
+ambiguous, state that the purpose is unclear instead of guessing.
 
 #### Step 7 — flag deep-dive candidates
 
