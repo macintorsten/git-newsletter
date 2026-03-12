@@ -34,6 +34,34 @@ Idempotency contract:
 `.github/skills/commit-analysis/`. Use it to collect data, then persist the results to
 `session_store`.
 
+`git_skills.py` carries PEP 723 inline metadata which documents its
+dependencies.  Run it with an activated venv (`python git_skills.py …`) or
+with `uv run` (`uv run git_skills.py …`) — both work equally well.
+
+#### Remote-URL caching — reuse across agents and process invocations
+
+When `--repo` is a remote URL (HTTPS or SSH), `git_skills.py` maintains a
+**persistent on-disk clone** so that subsequent invocations — including calls
+from different agents — do not pay the full clone cost again.
+
+- On the **first call** for a given URL the repo is cloned.
+- On every **subsequent call** the existing clone is opened and refreshed with
+  `git fetch --all --prune`.  This is much faster than re-cloning while still
+  ensuring callers see the latest commits.
+- The cache is stored in `~/.cache/git-newsletter/repos/<url-hash>/`.
+  Set `$GIT_NEWSLETTER_CACHE_DIR` to use that path directly as the repos root
+  instead (useful in CI or for isolated testing).
+- Pass `--no-cache` to any action to discard the cached clone and start fresh:
+
+```bash
+python .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo https://github.com/org/repo.git \
+    --branch main --days 7 --no-cache
+```
+
+For **local paths** there is nothing to cache across processes — the path is
+opened directly every time, which is instantaneous.
+
 #### Step 1 — read session parameters
 
 ```sql
@@ -43,6 +71,66 @@ FROM   nl_sessions WHERE session_id = '<session_id>';
 ```
 
 #### Step 2 — run the git helpers
+
+Run each command and parse the JSON output.
+
+With an activated venv or system Python:
+
+```bash
+python .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo <repo_path> --branch <branch> --days <period_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action branch-activity --repo <repo_path> --days <period_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action stale-branches --repo <repo_path> --stale-after <stale_after_days>
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action merged-branches --repo <repo_path> --target-branch <branch> --days <period_days>
+```
+
+Alternatively, using `uv run` (installs `gitpython` automatically, no venv needed):
+
+```bash
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo <repo_path> --branch <branch> --days <period_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action branch-activity --repo <repo_path> --days <period_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action stale-branches --repo <repo_path> --stale-after <stale_after_days>
+
+uv run .github/skills/commit-analysis/git_skills.py \
+    --action merged-branches --repo <repo_path> --target-branch <branch> --days <period_days>
+```
+
+Each command prints a JSON array to stdout. Parse and store the result.
+
+If you need a git operation that is not covered by the actions above, use the
+**`git-cmd` escape hatch**.  It has two concrete advantages over calling the
+`git` binary directly:
+
+1. **JSON output** — the result is wrapped in `{"output": "…"}`, matching the
+   same structured contract as every other action.  Parsers never need to
+   special-case this command.
+2. **Remote-URL auto-clone** — if `--repo` is a URL, the repository is cloned
+   automatically, just like the named actions.  No manual clone step required.
+
+`--git-args` accepts any git subcommand and its flags as a single quoted string:
+
+```bash
+# Arbitrary git operation — escape hatch for anything not covered above:
+python .github/skills/commit-analysis/git_skills.py \
+    --action git-cmd --repo <repo_path> --git-args "shortlog -sn HEAD"
+
+python .github/skills/commit-analysis/git_skills.py \
+    --action git-cmd --repo <repo_path> --git-args "log --oneline --graph -10"
+```
+
+Alternatively, when already running inside a Python process that has
+`gitpython` installed, import the functions directly:
 
 ```python
 from git_skills import (
@@ -60,7 +148,7 @@ merged_branches = get_merged_branches(repo_path, branch, period_days)
 
 Supports both local filesystem paths and remote URLs. Remote URLs are cloned
 once and cached; authentication uses the environment (SSH keys, credential
-helpers, etc.).
+helpers, `GITHUB_TOKEN`, etc.) — identical to the `git` CLI.
 
 #### Step 3 — persist commits
 

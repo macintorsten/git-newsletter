@@ -1,3 +1,8 @@
+# This file exists for development convenience (uv sync, IDE tooling, etc.).
+# The standalone scripts (build_email.py, send_email.py, generate_examples.py)
+# declare their own dependencies via PEP 723 inline metadata.  Run them with
+# your activated venv ("python build_email.py") or with "uv run build_email.py"
+# (no venv needed — uv resolves dependencies automatically).
 [project]
 name = "markdown-mailer"
 version = "0.2.0"

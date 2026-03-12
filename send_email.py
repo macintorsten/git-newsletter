@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "python-dotenv>=1.0.1",
+# ]
+# ///
+
 import argparse
 import smtplib
 import os
@@ -10,9 +18,9 @@ def main():
         from dotenv import load_dotenv
     except ImportError as exc:
         print(
-            "Error: missing dependency 'python-dotenv'. Install dependencies with '\\n"
-            "  uv sync\\n"
-            "or use a venv and pip before running this script.",
+            "Error: missing dependency 'python-dotenv'. Run this script with:\n"
+            "  uv run send_email.py\n"
+            "to let uv resolve dependencies automatically.",
             file=sys.stderr,
         )
         print(f"Import error: {exc}", file=sys.stderr)

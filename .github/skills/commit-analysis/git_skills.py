@@ -1,9 +1,48 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "gitpython>=3.1.40",
+# ]
+# ///
 """
 Git skill implementations.
 
 These functions are the low-level building blocks used by the GitSource adapter
 and can also be called directly by VS Code Copilot agents that follow the
 commit-analysis SKILL.md instructions.
+
+## Library usage
+
+Import and call any public function directly from Python:
+
+    from git_skills import get_recent_commits, get_branch_activity, ...
+
+## CLI usage
+
+Run ``python git_skills.py --action <action> [options]`` (or ``uv run git_skills.py …``)
+to execute a single skill function and receive JSON output on stdout:
+
+    python git_skills.py --action recent-commits  --repo <path> [--branch main] [--days 7]
+    python git_skills.py --action branch-activity --repo <path> [--days 7]
+    python git_skills.py --action stale-branches  --repo <path> [--stale-after 30]
+    python git_skills.py --action merged-branches --repo <path> [--target-branch main] [--days 7]
+    python git_skills.py --action commit-diff     --repo <path> --sha <sha>
+    python git_skills.py --action git-cmd         --repo <path> --git-args "log --oneline -5"
+
+The ``git-cmd`` action runs an arbitrary git subcommand and returns its output
+wrapped in a JSON object (``{"output": "<raw text>"}``).  It exists for
+operations not covered by the named actions above, and has two concrete
+advantages over calling the ``git`` binary directly:
+
+1. **JSON output** — the result fits the same structured JSON contract as every
+   other action, so parsers never need special-casing.
+2. **Remote-URL auto-clone** — if ``--repo`` is a URL, the repository is cloned
+   automatically into a temp directory (identical behaviour to the named
+   actions), so you do not need to clone it yourself first.
+
+``--git-args`` accepts a space-separated git subcommand and its flags
+(e.g. ``"shortlog -sn HEAD"``).
 
 All functions return plain JSON-serialisable dicts / lists so they can be
 written directly into the session database.
@@ -13,43 +52,87 @@ Both **local paths** and **remote URLs** are supported identically:
   - Remote URL:  ``https://github.com/org/repo.git``  or
                  ``git@github.com:org/repo.git``
 
-For remote URLs the repository is cloned once into a temporary directory the
-first time any skill function is called.  Subsequent calls within the same
-process reuse the cached ``git.Repo`` object — no extra cloning takes place.
-The temporary directory is deleted automatically when the process exits.
+For remote URLs the repository is cloned once into a **persistent on-disk
+cache** and reused across process invocations.  On every reuse the clone is
+updated with ``git fetch --all --prune`` so callers always see current data
+without paying the full clone cost.  The cache directory is resolved in order:
+
+1. ``$GIT_NEWSLETTER_CACHE_DIR`` — used directly as the repos root (no
+   extra subdirectories added); useful for CI or isolated testing
+2. ``$XDG_CACHE_HOME/git-newsletter/repos``
+3. ``~/.cache/git-newsletter/repos``
+
+Each remote URL maps to a sub-directory whose name is a short SHA-256 hash of
+the URL.  Pass ``--no-cache`` (CLI) or ``force_reclone=True`` (Python) to
+delete the cached clone and start fresh.
 
 Dependencies: gitpython (git)
 """
 
 from __future__ import annotations
 
-import atexit
+import argparse
+import hashlib
+import json
+import os
+import shlex
 import shutil
-import tempfile
+import sys
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import Any, Iterator
 
-# Module-level repo cache: original_path → (Repo, temp_dir_or_None)
-_repo_cache: dict[str, tuple[Any, str | None]] = {}
+# Module-level repo cache: original_path → Repo
+_repo_cache: dict[str, Any] = {}
+
+
+def _remote_clone_dir(url: str) -> Path:
+    """
+    Return the persistent on-disk cache directory for a remote URL clone.
+
+    The directory is deterministic — it is derived from a short SHA-256 hash of
+    the URL — so multiple processes targeting the same URL always land in the
+    same place.  Directory resolution order:
+
+    1. ``$GIT_NEWSLETTER_CACHE_DIR`` — used directly as the repos root (useful
+       for CI or testing; no extra subdirectories are appended)
+    2. ``$XDG_CACHE_HOME/git-newsletter/repos``
+    3. ``~/.cache/git-newsletter/repos``
+    """
+    if override := os.environ.get("GIT_NEWSLETTER_CACHE_DIR"):
+        cache_root = Path(override)
+    else:
+        xdg = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+        cache_root = Path(xdg) / "git-newsletter" / "repos"
+    url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
+    return cache_root / url_hash
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _open_repo(repo_path: str) -> Any:
+def _open_repo(repo_path: str, *, force_reclone: bool = False) -> Any:
     """
     Return a ``git.Repo`` object for *repo_path*, using a module-level cache.
 
-    Remote URLs are cloned once with ``--no-single-branch`` so that all remote
-    tracking refs (and therefore all branches) are available.  The temp
-    directory is registered with ``atexit`` for automatic cleanup.
+    **Local paths** are opened with ``search_parent_directories=True`` so that
+    calling with a subdirectory of a repo works correctly.
 
-    Local paths use ``search_parent_directories=True`` so that calling with a
-    subdirectory of a repo works correctly.
+    **Remote URLs** use a persistent on-disk cache so that multiple process
+    invocations (e.g. different agents both running git_skills.py) reuse the
+    same clone instead of each paying the full clone cost:
+
+    - On the first call the repo is cloned with ``--no-single-branch`` so that
+      all remote tracking refs are available.
+    - On subsequent calls the existing clone is opened and updated with
+      ``git fetch --all --prune``.  If the fetch fails (e.g. network issue) a
+      warning is printed to stderr and the stale clone is used as-is.
+    - Set *force_reclone* to ``True`` (or pass ``--no-cache`` on the CLI) to
+      discard the cached clone and start fresh.
     """
-    if repo_path in _repo_cache:
-        return _repo_cache[repo_path][0]
+    if not force_reclone and repo_path in _repo_cache:
+        return _repo_cache[repo_path]
 
     try:
         import git
@@ -60,13 +143,42 @@ def _open_repo(repo_path: str) -> Any:
         ) from exc
 
     if repo_path.startswith(("http://", "https://", "git@", "ssh://")):
-        tmp = tempfile.mkdtemp(prefix="git-newsletter-")
-        atexit.register(shutil.rmtree, tmp, ignore_errors=True)
-        repo = git.Repo.clone_from(repo_path, tmp, no_single_branch=True)
-        _repo_cache[repo_path] = (repo, tmp)
+        clone_dir = _remote_clone_dir(repo_path)
+
+        if force_reclone and clone_dir.exists():
+            shutil.rmtree(clone_dir)
+
+        needs_clone = not clone_dir.exists()
+
+        if not needs_clone:
+            try:
+                repo = git.Repo(clone_dir)
+            except (git.InvalidGitRepositoryError, git.NoSuchPathError):
+                # Corrupted cache — wipe and fall through to a fresh clone
+                shutil.rmtree(clone_dir, ignore_errors=True)
+                needs_clone = True
+            else:
+                # Update the cached clone so callers see current data
+                try:
+                    for remote in repo.remotes:
+                        remote.fetch(prune=True)
+                except Exception as fetch_err:
+                    print(
+                        f"[git-newsletter] Warning: fetch failed for {repo_path!r}: "
+                        f"{fetch_err}. Using cached data.",
+                        file=sys.stderr,
+                    )
+
+        if needs_clone:
+            # Handles both: directory never existed, and recovery from a
+            # corrupted cache that was wiped above.
+            clone_dir.mkdir(parents=True, exist_ok=True)
+            repo = git.Repo.clone_from(repo_path, clone_dir, no_single_branch=True)
+
+        _repo_cache[repo_path] = repo
     else:
         repo = git.Repo(repo_path, search_parent_directories=True)
-        _repo_cache[repo_path] = (repo, None)
+        _repo_cache[repo_path] = repo
 
     return repo
 
@@ -323,3 +435,103 @@ def get_commit_diff(repo_path: str, sha: str) -> str:
         return repo.git.show(sha, "--unified=3")
     except Exception as exc:
         return f"Could not retrieve diff for {sha}: {exc}"
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+_ACTIONS = ("recent-commits", "branch-activity", "stale-branches", "merged-branches", "commit-diff", "git-cmd")
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run a single git skill function and print JSON to stdout.\n\n"
+            "Actions:\n"
+            "  recent-commits   Commits on a branch within the last N days.\n"
+            "  branch-activity  Activity summary for all branches.\n"
+            "  stale-branches   Branches with no commits in the last N days.\n"
+            "  merged-branches  Branches merged into target within the last N days.\n"
+            "  commit-diff      Full unified diff for a single commit SHA.\n"
+            "  git-cmd          Run an arbitrary git subcommand and return its output\n"
+            "                   as JSON ({\"output\": \"...\"}).  Two benefits over a raw\n"
+            "                   git call: (1) output is JSON like every other action, and\n"
+            "                   (2) if --repo is a URL the repository is auto-cloned.\n"
+            "                   Provide the subcommand + args via --git-args.\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=_ACTIONS,
+        metavar="ACTION",
+        help="Skill to run: " + ", ".join(_ACTIONS),
+    )
+    parser.add_argument("--repo", required=True, help="Local path or remote URL of the repository")
+    parser.add_argument("--branch", default="main", help="Branch name (default: main)")
+    parser.add_argument("--target-branch", default="main", help="Target branch for merged-branches (default: main)")
+    parser.add_argument("--days", type=int, default=7, help="Look-back window in days (default: 7)")
+    parser.add_argument("--stale-after", type=int, default=30, help="Days before a branch is considered stale (default: 30)")
+    parser.add_argument("--sha", default=None, help="Commit SHA for commit-diff action")
+    parser.add_argument(
+        "--git-args",
+        default=None,
+        help=(
+            "Git subcommand and arguments for the git-cmd action, parsed with "
+            "shell-like quoting rules (e.g. 'log --oneline -5' or "
+            "'log --grep=\"fix bug\"'). "
+            "Wrap the whole value in quotes when calling from the shell."
+        ),
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        default=False,
+        help=(
+            "Discard any existing cached clone for --repo and re-clone from "
+            "scratch.  Only meaningful for remote URLs; ignored for local paths."
+        ),
+    )
+    return parser
+
+
+def _main() -> None:
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    try:
+        # Pre-open the repo so --no-cache is honoured before any skill function
+        # calls _open_repo internally (they all use the module-level cache, so
+        # the force_reclone only needs to happen once here).
+        _open_repo(args.repo, force_reclone=args.no_cache)
+
+        if args.action == "recent-commits":
+            result: Any = get_recent_commits(args.repo, args.branch, args.days)
+        elif args.action == "branch-activity":
+            result = get_branch_activity(args.repo, args.days)
+        elif args.action == "stale-branches":
+            result = get_stale_branches(args.repo, args.stale_after)
+        elif args.action == "merged-branches":
+            result = get_merged_branches(args.repo, args.target_branch, args.days)
+        elif args.action == "commit-diff":
+            if not args.sha:
+                parser.error("--sha is required for the commit-diff action")
+            result = get_commit_diff(args.repo, args.sha)
+        else:  # git-cmd
+            if not args.git_args:
+                parser.error("--git-args is required for the git-cmd action")
+            repo = _open_repo(args.repo)
+            git_argv = shlex.split(args.git_args)
+            output = repo.git.execute(["git"] + git_argv)
+            result = {"output": output}
+    except Exception as exc:
+        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        sys.exit(1)
+
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    _main()

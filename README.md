@@ -39,22 +39,59 @@ flowchart LR
 - [`newsletter-writer`](.github/agents/newsletter-writer.agent.md) assembles final newsletter markdown.
 - `newsletter-editor` returns the final output path/content.
 
-## Python setup (required once)
+## Python setup
 
 Use Python 3.11+.
 
+### Option A — venv (standard Python tooling)
+
+Create a venv once and activate it:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install .              # reads dependencies from pyproject.toml
+```
+
+Then run the scripts directly:
+
+```bash
+python build_email.py --help
+python send_email.py --help
+python generate_examples.py
+```
+
+### Option B — uv (zero-setup, dependency-isolated)
+
 Install `uv`: https://docs.astral.sh/uv/getting-started/installation/
 
-Prepare dependencies and activate the environment in the shell where you run
-Copilot CLI:
+```bash
+uv run build_email.py --help
+uv run send_email.py --help
+uv run generate_examples.py
+```
+
+`uv` reads the `# /// script … # ///`
+[PEP 723](https://peps.python.org/pep-0723/) block at the top of each script,
+installs the required packages into an isolated cache on first run, and reuses
+that cache on subsequent runs — no venv activation required.
+
+### Option C — uv sync (shared venv for IDE tooling)
+
+To get IDE auto-complete and to make `gitpython` available for the
+commit-analysis skill, create a shared venv once with:
 
 ```bash
 uv sync
-source .venv/bin/activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
+`pyproject.toml` lists all project dependencies and is the single source of
+truth for `uv sync`.
+
 The agents (especially commit analysis) execute Python helpers under
-`.github/skills/`, so missing Python packages can break the newsletter run.
+`.github/skills/`, so `gitpython` must be importable in the agent's Python
+environment — any of the options above covers this.
 
 ## Quickstart (Copilot CLI)
 
@@ -86,12 +123,12 @@ Available profile prompts:
 - `.github/prompts/profiles/examples/example-kubernetes-weekly.prompt.md`
 - `.github/prompts/profiles/examples/example-flask-monthly.prompt.md`
 
-Run utility scripts with:
+Run utility scripts with (activate your venv first, or prefix with `uv run`):
 
 ```bash
-uv run python build_email.py --help
-uv run python send_email.py --help
-uv run python generate_examples.py
+python build_email.py --help
+python send_email.py --help
+python generate_examples.py
 ```
 
 ## Extra scripts (after markdown is generated)
@@ -101,7 +138,7 @@ These scripts do not call Copilot. They are optional post-processing tools.
 1. Markdown/CSS to HTML:
 
 ```bash
-uv run python build_email.py \
+python build_email.py \
   --markdown samples/email/example_input.md \
   --style assets/email/styles/01-clean-blue.css \
   --output preview_output/ready_to_send.html
@@ -110,7 +147,7 @@ uv run python build_email.py \
 2. Generate all preview examples:
 
 ```bash
-uv run python generate_examples.py
+python generate_examples.py
 ```
 
 Open `preview_output/generated_html/index.html` in your browser and click through the generated files.
@@ -118,7 +155,7 @@ Open `preview_output/generated_html/index.html` in your browser and click throug
 3. Send over SMTP (optional):
 
 ```bash
-uv run python send_email.py \
+python send_email.py \
   --html preview_output/ready_to_send.html \
   --markdown samples/email/example_input.md \
   --to recipient@example.com \
