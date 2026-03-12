@@ -1,0 +1,142 @@
+/* ============================================================
+   Theme 11: Newsprint Ledger
+   Classic newspaper-inspired layout with sharp framing.
+   ============================================================ */
+
+body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    color: #1f1a17;
+    line-height: 1.72;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 30px 28px 34px;
+    background-color: #fcfaf5;
+    border: 1px solid #d8d0c2;
+}
+
+h1 {
+    font-size: 34px;
+    color: #111111;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin: 0 0 8px;
+    padding: 0 0 14px;
+    border-bottom: 3px double #1f1a17;
+    line-height: 1.1;
+}
+
+h2 {
+    display: block;
+    font-size: 12px;
+    color: #111111;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    padding: 0 0 6px;
+    border-bottom: 1px solid #6f6558;
+    text-transform: uppercase;
+    letter-spacing: 2.2px;
+}
+
+h3 {
+    font-size: 26px;
+    color: #171311;
+    margin-top: 6px;
+    margin-bottom: 10px;
+    line-height: 1.24;
+}
+
+h4 {
+    font-size: 14px;
+    color: #5f5447;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    line-height: 1.4;
+}
+
+p {
+    margin: 13px 0;
+}
+
+a {
+    color: #8b1e1e;
+    text-decoration: none;
+    border-bottom: 1px solid #b36a6a;
+    font-weight: bold;
+}
+
+ul, ol {
+    padding-left: 24px;
+    margin: 14px 0;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+blockquote {
+    margin: 24px 0;
+    padding: 16px 18px;
+    background-color: #f3ede2;
+    border-top: 1px solid #c9bca8;
+    border-bottom: 1px solid #c9bca8;
+    color: #453c33;
+    font-style: italic;
+}
+
+blockquote p {
+    margin: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+    border-top: 2px solid #2a2520;
+    border-bottom: 2px solid #2a2520;
+}
+
+th {
+    color: #111111;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #8f8374;
+}
+
+td {
+    padding: 10px 8px;
+    border-top: 1px solid #d8d0c2;
+}
+
+tr:nth-child(even) td {
+    background-color: #f7f2e9;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #8f8374;
+    margin: 28px 0;
+}
+
+code {
+    background-color: #f1eadf;
+    color: #4b2a2a;
+    padding: 2px 6px;
+    font-size: 13px;
+    border: 1px solid #d6cab7;
+    font-family: "Courier New", Courier, monospace;
+}
+
+em {
+    color: #605548;
+}
+
+strong {
+    color: #111111;
+}

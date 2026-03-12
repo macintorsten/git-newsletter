@@ -1,8 +1,10 @@
-# This file exists for development convenience (uv sync, IDE tooling, etc.).
-# The standalone scripts (build_email.py, send_email.py, generate_examples.py)
-# declare their own dependencies via PEP 723 inline metadata.  Run them with
-# your activated venv ("python build_email.py") or with "uv run build_email.py"
-# (no venv needed — uv resolves dependencies automatically).
+# Shared project metadata for `uv sync` and `pip install -e .`.
+# The standalone scripts also declare PEP 723 metadata, and this dependency set
+# intentionally mirrors that script-level metadata plus repo tooling needs.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "markdown-mailer"
 version = "0.2.0"
@@ -16,3 +18,6 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "gitpython>=3.1.40",
 ]
+
+[tool.setuptools]
+py-modules = ["build_email", "generate_examples", "send_email"]

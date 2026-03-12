@@ -1,69 +1,74 @@
 /* ============================================================
-   Style 06: Elegant Serif — Refined editorial, newspaper feel
-   Palette: #1a1a2e (deep navy), #faf6f1 (warm white), #b5924c (gold)
-   ============================================================ */
+    Style 06: Elegant Serif — Literary salon, soft and centered
+    Palette: #532b3a (mulberry), #fbf7f2 (porcelain), #c08a5b (warm bronze)
+    ============================================================ */
 
 body {
     font-family: Georgia, "Palatino Linotype", Palatino, "Book Antiqua", serif;
-    color: #2c2c2c;
-    line-height: 1.8;
-    max-width: 620px;
+    color: #442c35;
+    line-height: 1.82;
+    max-width: 580px;
     margin: 0 auto;
-    padding: 40px 32px;
-    background-color: #faf6f1;
-    border: 1px solid #e5ddd0;
+    padding: 46px 40px;
+    background-color: #fbf7f2;
+    border-top: 3px solid #c08a5b;
+    border-bottom: 3px solid #e7d7c8;
 }
 
 h1 {
-    font-size: 30px;
-    font-weight: 700;
-    color: #1a1a2e;
+    font-size: 34px;
+    font-weight: normal;
+    color: #532b3a;
     text-align: center;
-    letter-spacing: 1px;
-    border-top: 3px double #b5924c;
-    border-bottom: 3px double #b5924c;
-    padding: 14px 0;
-    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+    line-height: 1.12;
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #d9c4af;
 }
 
 h2 {
-    color: #1a1a2e;
+    color: #8a5a3b;
     font-weight: 700;
-    margin-top: 36px;
-    margin-bottom: 8px;
+    margin-top: 38px;
+    margin-bottom: 14px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 14px;
+    letter-spacing: 2.6px;
+    font-size: 12px;
+    text-align: center;
 }
 
 h3 {
-    font-size: 22px;
-    color: #3d2b1f;
-    font-style: italic;
-    margin-top: 24px;
-    margin-bottom: 8px;
+    font-size: 26px;
+    color: #532b3a;
+    font-style: normal;
+    margin-top: 28px;
+    margin-bottom: 10px;
     font-weight: normal;
+    line-height: 1.28;
+    text-align: center;
 }
 
 h4 {
     font-size: 13px;
-    color: #8b6230;
-    margin-top: 20px;
-    margin-bottom: 6px;
+    color: #8a5a3b;
+    margin-top: 22px;
+    margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 1.6px;
+    letter-spacing: 1.8px;
     line-height: 1.4;
+    text-align: center;
 }
 
 p {
     margin: 14px 0;
-    text-align: justify;
+    text-align: left;
 }
 
 a {
-    color: #8b6230;
+    color: #8a4f67;
     text-decoration: none;
-    border-bottom: 1px solid #d4a96a;
+    border-bottom: 1px solid #d7b79d;
 }
 
 ul, ol {
@@ -78,13 +83,12 @@ li {
 blockquote {
     margin: 28px 0;
     padding: 20px 24px;
-    border-top: 1px solid #d4a96a;
-    border-bottom: 1px solid #d4a96a;
-    color: #4a3728;
-    font-size: 17px;
+    border: 1px solid #eadfd3;
+    color: #6a3d4d;
+    font-size: 18px;
     font-style: italic;
     text-align: center;
-    background-color: #fcf9f4;
+    background-color: #fffdfa;
 }
 
 blockquote p {
@@ -97,11 +101,12 @@ table {
     margin: 24px 0;
     font-size: 13px;
     font-family: Arial, sans-serif;
+    background-color: #fffdfa;
 }
 
 th {
-    background-color: #1a1a2e;
-    color: #f0e6d0;
+    background-color: #6a3d4d;
+    color: #fff7f0;
     padding: 10px 14px;
     text-align: left;
     font-weight: bold;
@@ -112,30 +117,37 @@ th {
 
 td {
     padding: 10px 14px;
-    border-bottom: 1px solid #e5ddd0;
+    border-bottom: 1px solid #eadfd3;
 }
 
 tr:nth-child(even) td {
-    background-color: #f5efe8;
+    background-color: #f8f1ea;
 }
 
 hr {
     border: none;
     text-align: center;
     margin: 32px auto;
-    color: #b5924c;
+    color: #c08a5b;
     font-size: 20px;
     letter-spacing: 8px;
-    /* Decorative rule using content trick */
-    border-top: 1px solid #e5ddd0;
+    border-top: 1px solid #eadfd3;
 }
 
 code {
-    background-color: #f0e8da;
-    color: #5c3d1e;
+    background-color: #f6ece4;
+    color: #6a3d4d;
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 13px;
     font-family: "Courier New", Courier, monospace;
-    border: 1px solid #d4a96a;
+    border: 1px solid #e0c6af;
+}
+
+strong {
+    color: #532b3a;
+}
+
+em {
+    color: #7c4a5c;
 }

@@ -50,7 +50,7 @@ Create a venv once and activate it:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install .              # reads dependencies from pyproject.toml
+pip install -e .           # reads dependencies from pyproject.toml
 ```
 
 Then run the scripts directly:
@@ -76,6 +76,9 @@ uv run generate_examples.py
 installs the required packages into an isolated cache on first run, and reuses
 that cache on subsequent runs — no venv activation required.
 
+The script metadata and `pyproject.toml` are kept in sync, so `uv run`,
+`uv sync`, and `pip install -e .` resolve the same core dependencies.
+
 ### Option C — uv sync (shared venv for IDE tooling)
 
 To get IDE auto-complete and to make `gitpython` available for the
@@ -86,8 +89,8 @@ uv sync
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
-`pyproject.toml` lists all project dependencies and is the single source of
-truth for `uv sync`.
+`pyproject.toml` lists the shared dependency superset for the repo and should
+stay aligned with the PEP 723 metadata in the standalone scripts.
 
 The agents (especially commit analysis) execute Python helpers under
 `.github/skills/`, so `gitpython` must be importable in the agent's Python

@@ -1,0 +1,148 @@
+/* ============================================================
+   Theme 12: Executive Brief
+   Structured report styling with strong section framing.
+   ============================================================ */
+
+body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: #1a2333;
+    line-height: 1.68;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 0;
+    background-color: #f6f8fc;
+    border: 1px solid #d7dfec;
+    border-top: 12px solid #0f172a;
+}
+
+h1 {
+    font-size: 30px;
+    color: #ffffff;
+    background-color: #0f172a;
+    margin: 0;
+    padding: 24px 28px 18px;
+    letter-spacing: -0.6px;
+    line-height: 1.15;
+    border-bottom: 4px solid #ef4444;
+}
+
+h2 {
+    display: inline-block;
+    font-size: 12px;
+    color: #991b1b;
+    margin-top: 28px;
+    margin-bottom: 8px;
+    margin-left: 28px;
+    padding: 5px 8px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    text-transform: uppercase;
+    letter-spacing: 1.7px;
+}
+
+h3 {
+    font-size: 21px;
+    color: #0f172a;
+    margin-top: 2px;
+    margin-bottom: 10px;
+    padding: 0 28px 10px;
+    border-bottom: 2px solid #d7dfec;
+    line-height: 1.3;
+}
+
+h4 {
+    font-size: 14px;
+    color: #334155;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    padding: 0 28px;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    line-height: 1.4;
+}
+
+p {
+    margin: 13px 0;
+    padding: 0 28px;
+}
+
+a {
+    color: #b91c1c;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+ul, ol {
+    padding-left: 50px;
+    margin: 14px 0;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+blockquote {
+    margin: 22px 28px;
+    padding: 16px 18px;
+    background-color: #eef2ff;
+    border-left: 6px solid #475569;
+    color: #334155;
+    font-style: normal;
+}
+
+blockquote p {
+    margin: 0;
+    padding: 0;
+}
+
+table {
+    width: calc(100% - 56px);
+    border-collapse: collapse;
+    margin: 24px 28px;
+    font-size: 14px;
+    border: 1px solid #cfd8e3;
+    background-color: #ffffff;
+}
+
+th {
+    background-color: #e2e8f0;
+    color: #0f172a;
+    padding: 11px 12px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+td {
+    padding: 10px 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+tr:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #d7dfec;
+    margin: 28px 28px;
+}
+
+code {
+    background-color: #f8fafc;
+    color: #0f172a;
+    padding: 2px 6px;
+    font-size: 13px;
+    border: 1px solid #d7dfec;
+    font-family: "Courier New", Courier, monospace;
+}
+
+em {
+    color: #475569;
+}
+
+strong {
+    color: #0f172a;
+}
