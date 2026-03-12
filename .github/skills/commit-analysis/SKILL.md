@@ -38,6 +38,30 @@ Idempotency contract:
 dependencies.  Run it with an activated venv (`python git_skills.py …`) or
 with `uv run` (`uv run git_skills.py …`) — both work equally well.
 
+#### Remote-URL caching — reuse across agents and process invocations
+
+When `--repo` is a remote URL (HTTPS or SSH), `git_skills.py` maintains a
+**persistent on-disk clone** so that subsequent invocations — including calls
+from different agents — do not pay the full clone cost again.
+
+- On the **first call** for a given URL the repo is cloned.
+- On every **subsequent call** the existing clone is opened and refreshed with
+  `git fetch --all --prune`.  This is much faster than re-cloning while still
+  ensuring callers see the latest commits.
+- The cache is stored in `~/.cache/git-newsletter/repos/<url-hash>/`.
+  Set `$GIT_NEWSLETTER_CACHE_DIR` to use that path directly as the repos root
+  instead (useful in CI or for isolated testing).
+- Pass `--no-cache` to any action to discard the cached clone and start fresh:
+
+```bash
+python .github/skills/commit-analysis/git_skills.py \
+    --action recent-commits --repo https://github.com/org/repo.git \
+    --branch main --days 7 --no-cache
+```
+
+For **local paths** there is nothing to cache across processes — the path is
+opened directly every time, which is instantaneous.
+
 #### Step 1 — read session parameters
 
 ```sql

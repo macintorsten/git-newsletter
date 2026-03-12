@@ -52,10 +52,19 @@ Both **local paths** and **remote URLs** are supported identically:
   - Remote URL:  ``https://github.com/org/repo.git``  or
                  ``git@github.com:org/repo.git``
 
-For remote URLs the repository is cloned once into a temporary directory the
-first time any skill function is called.  Subsequent calls within the same
-process reuse the cached ``git.Repo`` object — no extra cloning takes place.
-The temporary directory is deleted automatically when the process exits.
+For remote URLs the repository is cloned once into a **persistent on-disk
+cache** and reused across process invocations.  On every reuse the clone is
+updated with ``git fetch --all --prune`` so callers always see current data
+without paying the full clone cost.  The cache directory is resolved in order:
+
+1. ``$GIT_NEWSLETTER_CACHE_DIR`` — used directly as the repos root (no
+   extra subdirectories added); useful for CI or isolated testing
+2. ``$XDG_CACHE_HOME/git-newsletter/repos``
+3. ``~/.cache/git-newsletter/repos``
+
+Each remote URL maps to a sub-directory whose name is a short SHA-256 hash of
+the URL.  Pass ``--no-cache`` (CLI) or ``force_reclone=True`` (Python) to
+delete the cached clone and start fresh.
 
 Dependencies: gitpython (git)
 """
@@ -63,36 +72,67 @@ Dependencies: gitpython (git)
 from __future__ import annotations
 
 import argparse
-import atexit
+import hashlib
 import json
+import os
 import shlex
 import shutil
 import sys
-import tempfile
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import Any, Iterator
 
-# Module-level repo cache: original_path → (Repo, temp_dir_or_None)
-_repo_cache: dict[str, tuple[Any, str | None]] = {}
+# Module-level repo cache: original_path → Repo
+_repo_cache: dict[str, Any] = {}
+
+
+def _remote_clone_dir(url: str) -> Path:
+    """
+    Return the persistent on-disk cache directory for a remote URL clone.
+
+    The directory is deterministic — it is derived from a short SHA-256 hash of
+    the URL — so multiple processes targeting the same URL always land in the
+    same place.  Directory resolution order:
+
+    1. ``$GIT_NEWSLETTER_CACHE_DIR`` — used directly as the repos root (useful
+       for CI or testing; no extra subdirectories are appended)
+    2. ``$XDG_CACHE_HOME/git-newsletter/repos``
+    3. ``~/.cache/git-newsletter/repos``
+    """
+    if override := os.environ.get("GIT_NEWSLETTER_CACHE_DIR"):
+        cache_root = Path(override)
+    else:
+        xdg = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+        cache_root = Path(xdg) / "git-newsletter" / "repos"
+    url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
+    return cache_root / url_hash
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _open_repo(repo_path: str) -> Any:
+def _open_repo(repo_path: str, *, force_reclone: bool = False) -> Any:
     """
     Return a ``git.Repo`` object for *repo_path*, using a module-level cache.
 
-    Remote URLs are cloned once with ``--no-single-branch`` so that all remote
-    tracking refs (and therefore all branches) are available.  The temp
-    directory is registered with ``atexit`` for automatic cleanup.
+    **Local paths** are opened with ``search_parent_directories=True`` so that
+    calling with a subdirectory of a repo works correctly.
 
-    Local paths use ``search_parent_directories=True`` so that calling with a
-    subdirectory of a repo works correctly.
+    **Remote URLs** use a persistent on-disk cache so that multiple process
+    invocations (e.g. different agents both running git_skills.py) reuse the
+    same clone instead of each paying the full clone cost:
+
+    - On the first call the repo is cloned with ``--no-single-branch`` so that
+      all remote tracking refs are available.
+    - On subsequent calls the existing clone is opened and updated with
+      ``git fetch --all --prune``.  If the fetch fails (e.g. network issue) a
+      warning is printed to stderr and the stale clone is used as-is.
+    - Set *force_reclone* to ``True`` (or pass ``--no-cache`` on the CLI) to
+      discard the cached clone and start fresh.
     """
-    if repo_path in _repo_cache:
-        return _repo_cache[repo_path][0]
+    if not force_reclone and repo_path in _repo_cache:
+        return _repo_cache[repo_path]
 
     try:
         import git
@@ -103,13 +143,42 @@ def _open_repo(repo_path: str) -> Any:
         ) from exc
 
     if repo_path.startswith(("http://", "https://", "git@", "ssh://")):
-        tmp = tempfile.mkdtemp(prefix="git-newsletter-")
-        atexit.register(shutil.rmtree, tmp, ignore_errors=True)
-        repo = git.Repo.clone_from(repo_path, tmp, no_single_branch=True)
-        _repo_cache[repo_path] = (repo, tmp)
+        clone_dir = _remote_clone_dir(repo_path)
+
+        if force_reclone and clone_dir.exists():
+            shutil.rmtree(clone_dir)
+
+        needs_clone = not clone_dir.exists()
+
+        if not needs_clone:
+            try:
+                repo = git.Repo(clone_dir)
+            except (git.InvalidGitRepositoryError, git.NoSuchPathError):
+                # Corrupted cache — wipe and fall through to a fresh clone
+                shutil.rmtree(clone_dir, ignore_errors=True)
+                needs_clone = True
+            else:
+                # Update the cached clone so callers see current data
+                try:
+                    for remote in repo.remotes:
+                        remote.fetch(prune=True)
+                except Exception as fetch_err:
+                    print(
+                        f"[git-newsletter] Warning: fetch failed for {repo_path!r}: "
+                        f"{fetch_err}. Using cached data.",
+                        file=sys.stderr,
+                    )
+
+        if needs_clone:
+            # Handles both: directory never existed, and recovery from a
+            # corrupted cache that was wiped above.
+            clone_dir.mkdir(parents=True, exist_ok=True)
+            repo = git.Repo.clone_from(repo_path, clone_dir, no_single_branch=True)
+
+        _repo_cache[repo_path] = repo
     else:
         repo = git.Repo(repo_path, search_parent_directories=True)
-        _repo_cache[repo_path] = (repo, None)
+        _repo_cache[repo_path] = repo
 
     return repo
 
@@ -416,6 +485,15 @@ def _build_parser() -> argparse.ArgumentParser:
             "Wrap the whole value in quotes when calling from the shell."
         ),
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        default=False,
+        help=(
+            "Discard any existing cached clone for --repo and re-clone from "
+            "scratch.  Only meaningful for remote URLs; ignored for local paths."
+        ),
+    )
     return parser
 
 
@@ -424,6 +502,11 @@ def _main() -> None:
     args = parser.parse_args()
 
     try:
+        # Pre-open the repo so --no-cache is honoured before any skill function
+        # calls _open_repo internally (they all use the module-level cache, so
+        # the force_reclone only needs to happen once here).
+        _open_repo(args.repo, force_reclone=args.no_cache)
+
         if args.action == "recent-commits":
             result: Any = get_recent_commits(args.repo, args.branch, args.days)
         elif args.action == "branch-activity":
