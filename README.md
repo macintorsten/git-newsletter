@@ -126,6 +126,39 @@ Available profile prompts:
 - `.github/prompts/profiles/examples/example-kubernetes-weekly.prompt.md`
 - `.github/prompts/profiles/examples/example-flask-monthly.prompt.md`
 
+Workspace slash-command prompts:
+
+- `.github/prompts/newsletter-vscode-weekly.prompt.md`
+- `.github/prompts/newsletter-kubernetes-weekly.prompt.md`
+- `.github/prompts/newsletter-flask-monthly.prompt.md`
+- `.github/prompts/newsletter-nextjs-weekly.prompt.md`
+- `.github/prompts/newsletter-github-cli-weekly.prompt.md`
+- `.github/prompts/newsletter-python-monthly.prompt.md`
+- `.github/prompts/newsletter-react-weekly.prompt.md`
+- `.github/prompts/newsletter-deno-weekly.prompt.md`
+- `.github/prompts/newsletter-vite-weekly.prompt.md`
+- `.github/prompts/newsletter-fastapi-monthly.prompt.md`
+- `.github/prompts/newsletter-postgresql-monthly.prompt.md`
+- `.github/prompts/newsletter-terraform-weekly.prompt.md`
+
+In VS Code chat these prompt files appear as slash commands, so every example now starts with the same prefix: `/newsletter-...`. For example, you can trigger `/newsletter-vscode-weekly` or `/newsletter-terraform-weekly` and then add optional override text.
+
+The example profile prompts in `.github/prompts/profiles/examples/` do not declare or imply any email style. They are editorial templates only. The preview gallery pairs a prompt example with a checked-in markdown sample and a CSS theme inside `generate_examples.py` so those concerns stay separate.
+
+Example slash-command usage in VS Code chat:
+
+```text
+/newsletter-vscode-weekly repo=https://github.com/microsoft/vscode.git output_path=my-vscode-digest.md
+```
+
+Example Copilot CLI usage with an example profile:
+
+```bash
+copilot --experimental -p "Use profile prompt file .github/prompts/profiles/examples/example-vscode-weekly.prompt.md.
+Generate the newsletter using the profile defaults. Apply these overrides if present: repo=https://github.com/microsoft/vscode.git output_path=my-vscode-digest.md.
+Respond with only the final newsletter markdown content." --agent "newsletter-editor" --yolo
+```
+
 Run utility scripts with (activate your venv first, or prefix with `uv run`):
 
 ```bash
@@ -153,7 +186,11 @@ python build_email.py \
 python generate_examples.py
 ```
 
-Open `preview_output/generated_html/index.html` in your browser and click through the generated files.
+This reads example prompt files from `.github/prompts/profiles/examples/`, uses the already checked-in markdown samples in `samples/email/`, and generates prompt-aware previews in `preview_output/generated_html/` without invoking Copilot.
+
+The checked-in samples used by the gallery live in `samples/email/examples/`. They start as 12 identical copies of the existing real sample so you can replace them one by one later with human-reviewed markdown for each prompt example.
+
+Open `preview_output/generated_html/index.html` in your browser to view each prompt beside its fixed-width preview, slash command, and CLI invocation.
 
 3. Send over SMTP (optional):
 

@@ -3,47 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Newsletter Style Gallery</title>
+  <title>Newsletter Example Gallery</title>
   <style>
     :root {
-      --bg: #f4f4f2;
+      --bg: #f2efe8;
       --paper: #ffffff;
-      --paper-strong: #ffffff;
-      --text: #171717;
-      --muted: #666666;
-      --line: #dddddd;
-      --accent: #1f4b99;
-      --accent-soft: #edf3ff;
-      --accent-2: #4b5563;
-      --shadow: rgba(15, 23, 42, 0.05);
+      --paper-soft: #fbf7f0;
+      --text: #1d1a16;
+      --muted: #6a655d;
+      --line: #d8cec2;
+      --accent: #9f3a2f;
+      --accent-soft: #f8e3d8;
+      --accent-2: #315c7c;
+      --shadow: rgba(65, 43, 19, 0.08);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-family: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 30%),
+        linear-gradient(180deg, #f7f1e6 0%, var(--bg) 45%, #ede3d6 100%);
     }
 
     .wrap {
-      max-width: 1400px;
+      max-width: 1520px;
       margin: 0 auto;
       padding: 24px 20px 36px;
     }
 
     .hero {
       display: block;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
     }
 
     .hero-copy {
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      padding: 0;
-      box-shadow: none;
+      width: min(100%, 1320px);
+      margin: 0 auto;
+      padding: 22px 24px;
+      border: 1px solid rgba(159, 58, 47, 0.16);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(251, 247, 240, 0.92));
+      box-shadow: 0 14px 32px var(--shadow);
     }
 
     .eyebrow {
@@ -57,18 +61,32 @@
 
     h1 {
       margin: 0;
-      font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      font-family: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
       font-size: clamp(1.8rem, 3vw, 2.6rem);
-      line-height: 1.02;
+      line-height: 1.04;
       letter-spacing: -0.04em;
     }
 
     .lead {
       margin: 8px 0 0;
       color: var(--muted);
-      max-width: 58rem;
+      max-width: 60rem;
       font-size: 0.95rem;
       line-height: 1.55;
+    }
+
+    .hero-note {
+      margin: 14px 0 0;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--accent-2);
+      background: rgba(49, 92, 124, 0.08);
+      border: 1px solid rgba(49, 92, 124, 0.14);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.86rem;
+      font-weight: 600;
     }
 
     .hero-aside {
@@ -90,10 +108,11 @@
 
     .section-head {
       display: flex;
+      width: min(100%, 1320px);
+      margin: 0 auto 14px;
       align-items: baseline;
       justify-content: space-between;
       gap: 16px;
-      margin: 0 0 14px;
       padding-bottom: 10px;
       border-bottom: 1px solid var(--line);
     }
@@ -114,37 +133,40 @@
 
     .grid {
       display: grid;
-      gap: 18px;
-      grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
+      gap: 22px;
+      grid-template-columns: 1fr;
+      justify-items: center;
     }
 
     .card {
+      width: min(100%, 1320px);
       background: var(--paper);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 4px 16px var(--shadow);
+      box-shadow: 0 12px 28px var(--shadow);
     }
 
     .card-header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 16px;
-      padding: 14px 16px 12px;
+      padding: 18px 20px 16px;
       border-bottom: 1px solid var(--line);
-      background: #f8f8f8;
+      background: linear-gradient(180deg, #fffdf9 0%, #f7f1e7 100%);
     }
 
     .card-header h2 {
       margin: 0;
-      font-size: 1.12rem;
+      font-size: 1.2rem;
       line-height: 1.25;
     }
 
     .card-header p {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.94rem;
+      line-height: 1.5;
     }
 
     .card-header .actions {
@@ -156,42 +178,154 @@
     }
 
     .btn {
-      border: 1px solid #c9d6ee;
+      border: 1px solid rgba(159, 58, 47, 0.24);
       color: var(--accent);
       text-decoration: none;
       padding: 8px 11px;
-      border-radius: 8px;
+      border-radius: 999px;
       background: var(--accent-soft);
       font-weight: 600;
       font-size: 0.85rem;
     }
 
     .btn-flowing {
-      border-color: #d3d7dd;
+      border-color: rgba(49, 92, 124, 0.18);
       color: var(--accent-2);
-      background: #f2f4f7;
+      background: rgba(49, 92, 124, 0.08);
     }
 
-    .previews {
-      padding: 0;
-      background: transparent;
+    .card-body {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      min-height: 620px;
     }
 
-    .previews section {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
+    .prompt-pane {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(251, 247, 240, 0.96), rgba(247, 241, 231, 0.9)),
+        repeating-linear-gradient(180deg, rgba(159, 58, 47, 0.02) 0, rgba(159, 58, 47, 0.02) 28px, transparent 28px, transparent 56px);
+      padding: 18px 18px 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(159, 58, 47, 0.12);
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .pane-kicker {
+      display: inline-flex;
+      margin-bottom: 12px;
+    }
+
+    .meta-list {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    .meta-row {
+      display: grid;
+      gap: 2px;
+    }
+
+    .meta-row strong {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .meta-row span,
+    .meta-row a {
+      color: var(--text);
+      text-decoration: none;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .meta-row a:hover {
+      color: var(--accent);
+    }
+
+    .command-block {
+      margin: 0 0 16px;
+      flex: 0 0 auto;
+    }
+
+    .prompt-block {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .command-block h3,
+    .prompt-block h3,
+    .preview-pane h3 {
+      margin: 0 0 8px;
+      color: var(--accent-2);
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(49, 92, 124, 0.14);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--text);
+      font-size: 0.84rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    }
+
+    .prompt-text {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .preview-pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 18px 18px 20px;
+      background: linear-gradient(180deg, #fff 0%, #faf8f4 100%);
+    }
+
+    .preview-frame {
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+      border: 1px solid rgba(49, 92, 124, 0.14);
+      border-radius: 18px;
       overflow: hidden;
-    }
-
-    .previews h3 {
-      display: none;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(49, 92, 124, 0.08);
     }
 
     iframe {
+      flex: 1 1 auto;
       width: 100%;
-      min-width: 600px;
-      height: 520px;
+      min-width: 0;
+      height: 100%;
       border: 0;
       display: block;
       background: #fff;
@@ -202,11 +336,20 @@
         padding-left: 16px;
         padding-right: 16px;
       }
+
+      .card-body {
+        grid-template-columns: 1fr;
+      }
+
+      .prompt-pane {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
     }
 
     @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
+      .hero-copy {
+        padding: 18px;
       }
     }
 
@@ -214,18 +357,30 @@
       .wrap {
         padding: 16px 12px 24px;
       }
-      .card,
-      .previews section {
-        border-radius: 10px;
+
+      .card {
+        border-radius: 14px;
       }
+
       .card-header {
         grid-template-columns: 1fr;
       }
+
       .card-header .actions {
         margin-top: 4px;
       }
+
+      .prompt-pane,
+      .preview-pane {
+        padding: 14px;
+      }
+
+      .preview-frame {
+        min-height: 420px;
+      }
+
       iframe {
-        height: 420px;
+        min-width: 100%;
       }
     }
   </style>
@@ -235,31 +390,47 @@
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow">Preview Studio</p>
-        <h1>Newsletter themes with more shape, rhythm, and hierarchy.</h1>
-        <p class="lead">The fixed view shows the email-safe 600 px column. Open a card only when you want the full standalone preview.</p>
+        <h1>Prompt examples and style previews, shown together without tying one to the other.</h1>
+        <p class="lead">Each card combines two independent ingredients: a reusable prompt template that helps a human generate newsletter markdown offline, and a visual style applied later by the preview builder to a checked-in markdown sample. The gallery is intentionally showing the combination, not claiming that the prompt owns the style.</p>
+        <p class="hero-note">All markdown samples are checked in and can be replaced one by one later without changing the prompt templates.</p>
       </div>
     </section>
     <header class="section-head">
-      <h2>Theme Library</h2>
-      <p>{{ cards|length }} style previews</p>
+      <h2>Example Library</h2>
+      <p>{{ cards|length }} prompt-driven previews</p>
     </header>
     <section class="grid">
       {% for card in cards %}
       <article class="card">
         <header class="card-header">
           <div>
-            <h2>{{ card.title }}</h2>
-            <p>{{ card.style_file }}</p>
+            <h2>{{ card.style_name }}</h2>
+            <p>{{ card.title }} · {{ card.summary }}</p>
           </div>
           <div class="actions">
             <a class="btn" href="{{ card.fixed_file }}" target="_blank" rel="noopener noreferrer">Open Fixed (600 px)</a>
             <a class="btn btn-flowing" href="{{ card.flowing_file }}" target="_blank" rel="noopener noreferrer">Open Flowing</a>
           </div>
         </header>
-        <div class="previews">
-          <section>
-            <h3>Preview</h3>
-            <iframe src="{{ card.fixed_file }}" title="{{ card.title }} preview"></iframe>
+        <div class="card-body">
+          <aside class="prompt-pane">
+            <span class="pill pane-kicker">Prompt template</span>
+
+            <div class="command-block">
+              <h3>VS Code Slash Command</h3>
+              <pre>{{ card.slash_command }}</pre>
+            </div>
+
+            <div class="prompt-block">
+              <h3>Prompt Text</h3>
+              <pre class="prompt-text">{{ card.prompt_body }}</pre>
+            </div>
+          </aside>
+
+          <section class="preview-pane">
+            <div class="preview-frame">
+              <iframe src="{{ card.flowing_file }}" title="{{ card.title }} preview"></iframe>
+            </div>
           </section>
         </div>
       </article>
