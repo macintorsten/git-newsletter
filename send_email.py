@@ -35,7 +35,13 @@ def main():
         default=None,
         help="Path to the Markdown file to use as the plain text body (optional)",
     )
-    parser.add_argument("--to", required=True, help="Recipient email address")
+    parser.add_argument(
+        "--to",
+        required=True,
+        nargs="+",
+        metavar="ADDRESS",
+        help="Recipient email address(es). Pass multiple addresses separated by spaces.",
+    )
     parser.add_argument("--subject", required=True, help="Email subject line")
     parser.add_argument(
         "--smtp-server",
@@ -110,7 +116,7 @@ def main():
     msg = EmailMessage()
     msg["Subject"] = args.subject
     msg["From"] = sender_email
-    msg["To"] = args.to
+    msg["To"] = ", ".join(args.to)
     msg.set_content(plain_text)
     msg.add_alternative(html_content, subtype="html")
 
@@ -122,7 +128,7 @@ def main():
             if not args.no_auth:
                 server.login(smtp_user, smtp_pass)
             server.send_message(msg)
-        print(f"Success! Email sent to {args.to}")
+        print(f"Success! Email sent to {', '.join(args.to)}")
     except Exception as e:
         print(f"Failed to send email: {e}")
         sys.exit(1)
